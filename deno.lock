@@ -1,0 +1,21 @@
+{
+  "version": "3",
+  "packages": {
+    "specifiers": {
+      "npm:meilisearch@^0.44.1": "npm:meilisearch@0.44.1"
+    },
+    "npm": {
+      "meilisearch@0.44.1": {
+        "integrity": "sha512-ZTZYBmomtRwjaWbvU8U8ct04g/YnrNOlvchogJOPgHcQIQBfjdbAvMJ8mLhuZEzpioYXIT6Cv+FcE150pc2+nw==",
+        "dependencies": {}
+      }
+    }
+  },
+  "remote": {},
+  "workspace": {
+    "dependencies": [
+      "jsr:@deno/dnt@^0.41.3",
+      "npm:meilisearch@^0.44.1"
+    ]
+  }
+}

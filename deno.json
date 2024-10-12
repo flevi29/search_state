@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "tasks": {
+    "run-docker": "docker run -p 7700:7700 --rm getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics",
+    "doc-lint": ""
+  },
+  "imports": {
+    "@deno/dnt": "jsr:@deno/dnt@^0.41.3",
+    "meilisearch": "npm:meilisearch@^0.44.1"
+  },
+  "nodeModulesDir": "auto",
+  "compilerOptions": {
+    "verbatimModuleSyntax": true,
+    "noImplicitOverride": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
