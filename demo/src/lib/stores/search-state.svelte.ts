@@ -1,12 +1,6 @@
 import { writable, derived, readonly } from "svelte/store";
-import {
-  MeiliSearch,
-  MeiliSearchApiError,
-  type IndexObject,
-} from "meilisearch";
+import { MeiliSearch, MeiliSearchApiError, type IndexStats } from "meilisearch";
 import { SearchState } from "$rootSrc/mod";
-
-const INDEX_UID = "i";
 
 const STATUS = Object.freeze({
   OK: 0,
@@ -28,7 +22,8 @@ function getErrorMessage(error: unknown): string {
 }
 
 const LS_HOST_KEY = "0",
-  LS_API_KEY_KEY = "1";
+  LS_API_KEY_KEY = "1",
+  LS_INDEX_KEY = "2";
 
 const searchState = (() => {
   const hostAndApiKey = writable<[host: string | null, apiKey: string | null]>([
@@ -38,7 +33,10 @@ const searchState = (() => {
 
   let rawSearchState = $state<SearchState | null>(null),
     // TODO: Query all indexes for more details
-    rawIndexes = $state<IndexObject[] | null>(null);
+    indexes = $state<Record<string, IndexStats> | null>(null),
+    selectedIndex = $state<string | null>(
+      localStorage.getItem(LS_INDEX_KEY) || null,
+    );
 
   const searchState = derived<
       typeof hostAndApiKey,
@@ -53,7 +51,8 @@ const searchState = (() => {
       ([host, apiKey], set) => {
         if (host === null || apiKey === null) {
           rawSearchState = null;
-          rawIndexes = null;
+          indexes = null;
+          selectedIndex = null;
           return set(null);
         }
 
@@ -62,13 +61,33 @@ const searchState = (() => {
 
           const promise = meilisearch
             .getRawIndexes({ limit: 50 })
-            .then(({ results }) => {
+            .then(({ results }) =>
+              Promise.all(
+                results.map(({ uid }) =>
+                  meilisearch
+                    .index(uid)
+                    .getStats()
+                    .then((stats) => ({ uid, stats })),
+                ),
+              ),
+            )
+            .then((indexesWithStats) => {
               const st = new SearchState(meilisearch);
               st.start();
               set({ status: STATUS.OK, value: st });
               rawSearchState = st;
+              // TODO: What if there are not indexes? What will the value be?
+              indexes = indexesWithStats.reduce(
+                (previousValue, { uid, stats }) => {
+                  previousValue[uid] = stats;
+                  return previousValue;
+                },
+                {} as Record<string, IndexStats>,
+              );
 
-              rawIndexes = results;
+              if (selectedIndex === null) {
+                selectedIndex = indexesWithStats[0]?.uid ?? null;
+              }
 
               return st.stop;
             })
@@ -83,7 +102,8 @@ const searchState = (() => {
                 value: getErrorMessage(error),
               });
               rawSearchState = null;
-              rawIndexes = null;
+              indexes = null;
+              selectedIndex = null;
             });
 
           // stop previous `SearchState`
@@ -96,7 +116,8 @@ const searchState = (() => {
             value: getErrorMessage(error),
           });
           rawSearchState = null;
-          rawIndexes = null;
+          indexes = null;
+          selectedIndex = null;
         }
       },
       null,
@@ -118,10 +139,23 @@ const searchState = (() => {
     get rawValue() {
       return rawSearchState;
     },
-    get rawIndexes() {
-      return rawIndexes;
+    get indexes() {
+      return indexes;
+    },
+    get selectedIndex() {
+      return selectedIndex;
+    },
+    setSelectedIndex(v: string): void {
+      if (indexes === null || !(v in indexes)) {
+        throw new Error(
+          `either indexes are not set or provided key "${v}" cannot be found in indexes`,
+        );
+      }
+
+      selectedIndex = v;
+      localStorage.setItem(LS_INDEX_KEY, v);
     },
   };
 })();
 
-export { INDEX_UID, searchState, STATUS };
+export { searchState, STATUS };

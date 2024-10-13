@@ -2,32 +2,41 @@
   import "../app.css";
 
   import { searchState } from "$lib/stores/search-state.svelte";
-  import { INDEX_UID, STATUS } from "$lib/stores/search-state.svelte";
+  import { STATUS } from "$lib/stores/search-state.svelte";
   import ApiSettings from "./api-settings.svelte";
+  import IndexSelector from "./index-selector.svelte";
   import SearchBox from "./search-box.svelte";
   import SortBy from "./sort-by.svelte";
 
   const { children } = $props();
   const { value: searchStateValue, isHostAndApiKeySet } = searchState;
+  // TODO: Add UI logic for when there are no indexes
 </script>
 
 <div>
   <main>
-    <ApiSettings />
+    <div>
+      <ApiSettings />
+    </div>
 
     {#if $isHostAndApiKeySet}
       {#if $searchStateValue !== null}
         {@const { status, value } = $searchStateValue}
 
         {#if status === STATUS.OK}
+          <IndexSelector />
+
+          <SearchBox
+            indexUid={searchState.selectedIndex!}
+            searchState={value}
+          />
+
+          <SortBy indexUid={searchState.selectedIndex!} searchState={value} />
+
           <div>
             <a href="./">estimated</a>
             <a href="./numbered-pagination">numbered</a>
           </div>
-
-          <SearchBox indexUid={INDEX_UID} searchState={value} />
-
-          <SortBy indexUid={INDEX_UID} searchState={value} />
 
           <div>
             {@render children()}

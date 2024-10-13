@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { INDEX_UID, searchState } from "$lib/stores/search-state.svelte";
+  import { searchState } from "$lib/stores/search-state.svelte";
   import { getHitsWithPaginationWidget } from "$lib/stores/hits-with-pagination.svelte";
   import HitsPerPage from "$lib/components/hits-per-page.svelte";
   import Hits from "$lib/components/hits.svelte";
   import Pagination from "$lib/components/pagination.svelte";
 
-  const w = $derived(getHitsWithPaginationWidget(INDEX_UID, searchState.rawValue!));
+  const w = $derived(
+    getHitsWithPaginationWidget(searchState.selectedIndex!, searchState.rawValue!),
+  );
 
   $effect(() => w.unmount);
 </script>
