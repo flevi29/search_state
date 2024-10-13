@@ -1,5 +1,9 @@
-import { writable, derived } from "svelte/store";
-import { MeiliSearch, MeiliSearchApiError } from "meilisearch";
+import { writable, derived, readonly } from "svelte/store";
+import {
+  MeiliSearch,
+  MeiliSearchApiError,
+  type IndexObject,
+} from "meilisearch";
 import { SearchState } from "$rootSrc/mod";
 
 const INDEX_UID = "i";
@@ -23,14 +27,21 @@ function getErrorMessage(error: unknown): string {
   return JSON.stringify(error, null, 2);
 }
 
-const searchState = (() => {
-  // TODO: localstorage
-  const host = writable<string | null>(null),
-    apiKey = writable<string | null>(null);
+const LS_HOST_KEY = "0",
+  LS_API_KEY_KEY = "1";
 
-  let rawSearchState = $state<SearchState | null>(null);
+const searchState = (() => {
+  const hostAndApiKey = writable<[host: string | null, apiKey: string | null]>([
+    localStorage.getItem(LS_HOST_KEY),
+    localStorage.getItem(LS_API_KEY_KEY),
+  ]);
+
+  let rawSearchState = $state<SearchState | null>(null),
+    // TODO: Query all indexes for more details
+    rawIndexes = $state<IndexObject[] | null>(null);
+
   const searchState = derived<
-    [typeof host, typeof apiKey],
+    typeof hostAndApiKey,
     | { status: StatusType["OK"]; value: SearchState }
     | {
         status: StatusType["INVALID_API_KEY" | "UNKNOWN_ERROR"];
@@ -38,24 +49,26 @@ const searchState = (() => {
       }
     | null
   >(
-    [host, apiKey],
+    hostAndApiKey,
     ([host, apiKey], set) => {
       if (host === null || apiKey === null) {
+        rawSearchState = null;
+        rawIndexes = null;
         return set(null);
       }
 
       try {
         const meilisearch = new MeiliSearch({ host, apiKey });
 
-        // TODO: This does not trigger api error perhaps?
         const promise = meilisearch
           .getRawIndexes({ limit: 50 })
-          .then(() => {
-            // TODO: Set indexes state
+          .then(({ results }) => {
             const st = new SearchState(meilisearch);
             st.start();
             set({ status: STATUS.OK, value: st });
             rawSearchState = st;
+
+            rawIndexes = results;
 
             return st.stop;
           })
@@ -70,6 +83,7 @@ const searchState = (() => {
               value: getErrorMessage(error),
             });
             rawSearchState = null;
+            rawIndexes = null;
           });
 
         // stop previous `SearchState`
@@ -82,17 +96,25 @@ const searchState = (() => {
           value: getErrorMessage(error),
         });
         rawSearchState = null;
+        rawIndexes = null;
       }
     },
     null,
   );
 
   return {
-    setHost: host.set,
-    setApiKey: apiKey.set,
+    hostAndApiKey: readonly(hostAndApiKey),
+    setHostAndApiKey(host: string, apiKey: string): void {
+      hostAndApiKey.set([host || null, apiKey || null]);
+      localStorage.setItem(LS_HOST_KEY, host);
+      localStorage.setItem(LS_API_KEY_KEY, apiKey);
+    },
     value: searchState,
     get rawValue() {
       return rawSearchState;
+    },
+    get rawIndexes() {
+      return rawIndexes;
     },
   };
 })();

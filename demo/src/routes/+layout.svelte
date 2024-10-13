@@ -1,14 +1,9 @@
-<script module lang="ts">
-  import { searchState } from "$lib/stores/search-state.svelte";
-
-  searchState.setHost("http://meilisearch:7700");
-  searchState.setApiKey("masterKey");
-</script>
-
 <script lang="ts">
   import "../app.css";
 
+  import { searchState } from "$lib/stores/search-state.svelte";
   import { INDEX_UID, STATUS } from "$lib/stores/search-state.svelte";
+  import HostAndApiKeySelector from "./host-and-api-key-selector.svelte";
   import SearchBox from "./search-box.svelte";
   import SortBy from "./sort-by.svelte";
 
@@ -18,6 +13,8 @@
 
 <div>
   <main>
+    <HostAndApiKeySelector />
+
     <div>
       <a href="./">estimated</a>
       <a href="./numbered-pagination">numbered</a>
