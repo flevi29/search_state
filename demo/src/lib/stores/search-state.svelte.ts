@@ -1,3 +1,4 @@
+import { writable, derived } from "svelte/store";
 import { MeiliSearch, MeiliSearchApiError } from "meilisearch";
 import { SearchState } from "$rootSrc/mod";
 
@@ -11,68 +12,89 @@ const STATUS = Object.freeze({
 
 type StatusType = typeof STATUS;
 
-function getSearchState(initialHost: string, initialApiKey: string) {
-  let host = $state<string>(initialHost),
-    apiKey = $state<string>(initialApiKey),
-    searchState = $state<
-      | { status: StatusType["OK"]; value: SearchState }
-      | { status: StatusType["INVALID_API_KEY"]; value: MeiliSearchApiError }
-      | { status: StatusType["UNKNOWN_ERROR"]; value: string }
-      | null
-    >(null);
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    const msg = String(error);
+    return error.cause == null
+      ? msg
+      : `${msg}\ncaused by ${getErrorMessage(error.cause)}`;
+  }
 
-  $effect(() => {
-    try {
-      const meilisearch = new MeiliSearch({ host, apiKey });
-
-      // TODO: This does not trigger api error perhaps?
-      const promise = meilisearch
-        .health()
-        .then(({ status }) => {
-          if (status === "available") {
-            const st = new SearchState(meilisearch);
-            st.start();
-            searchState = { status: STATUS.OK, value: st };
-
-            return st.stop;
-          }
-
-          searchState = {
-            status: STATUS.UNKNOWN_ERROR,
-            value: "Meilisearch could be reached, but it is unavailable",
-          };
-        })
-        .catch((error: unknown) => {
-          searchState =
-            error instanceof MeiliSearchApiError &&
-            // https://www.meilisearch.com/docs/reference/errors/error_codes#invalid_api_key
-            error.cause?.code === "invalid_api_key"
-              ? { status: STATUS.INVALID_API_KEY, value: error }
-              : // TODO: error message
-                { status: STATUS.UNKNOWN_ERROR, value: "" };
-        });
-
-      // stop previous `SearchState`
-      return () => {
-        promise.then((v) => v?.()).catch(console.error);
-      };
-    } catch (error) {
-      // TODO: error message
-      searchState = { status: STATUS.UNKNOWN_ERROR, value: "" };
-    }
-  });
-
-  return {
-    setHost(v: string): void {
-      host = v;
-    },
-    setApiKey(v: string): void {
-      apiKey = v;
-    },
-    get searchState() {
-      return searchState;
-    },
-  };
+  return JSON.stringify(error, null, 2);
 }
 
-export { INDEX_UID, getSearchState, STATUS };
+const searchState = (() => {
+  // TODO: localstorage
+  const host = writable<string | null>(null),
+    apiKey = writable<string | null>(null);
+
+  let rawSearchState = $state<SearchState | null>(null);
+  const searchState = derived<
+    [typeof host, typeof apiKey],
+    | { status: StatusType["OK"]; value: SearchState }
+    | {
+        status: StatusType["INVALID_API_KEY" | "UNKNOWN_ERROR"];
+        value: string;
+      }
+    | null
+  >(
+    [host, apiKey],
+    ([host, apiKey], set) => {
+      if (host === null || apiKey === null) {
+        return set(null);
+      }
+
+      try {
+        const meilisearch = new MeiliSearch({ host, apiKey });
+
+        // TODO: This does not trigger api error perhaps?
+        const promise = meilisearch
+          .getRawIndexes({ limit: 50 })
+          .then(() => {
+            // TODO: Set indexes state
+            const st = new SearchState(meilisearch);
+            st.start();
+            set({ status: STATUS.OK, value: st });
+            rawSearchState = st;
+
+            return st.stop;
+          })
+          .catch((error: unknown) => {
+            set({
+              status:
+                error instanceof MeiliSearchApiError &&
+                // https://www.meilisearch.com/docs/reference/errors/error_codes#invalid_api_key
+                error.cause?.code === "invalid_api_key"
+                  ? STATUS.INVALID_API_KEY
+                  : STATUS.UNKNOWN_ERROR,
+              value: getErrorMessage(error),
+            });
+            rawSearchState = null;
+          });
+
+        // stop previous `SearchState`
+        return () => {
+          promise.then((v) => v?.()).catch(console.error);
+        };
+      } catch (error) {
+        set({
+          status: STATUS.UNKNOWN_ERROR,
+          value: getErrorMessage(error),
+        });
+        rawSearchState = null;
+      }
+    },
+    null,
+  );
+
+  return {
+    setHost: host.set,
+    setApiKey: apiKey.set,
+    value: searchState,
+    get rawValue() {
+      return rawSearchState;
+    },
+  };
+})();
+
+export { INDEX_UID, searchState, STATUS };

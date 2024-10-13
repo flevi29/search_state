@@ -1,57 +1,47 @@
+<script module lang="ts">
+  import { searchState } from "$lib/stores/search-state.svelte";
+
+  searchState.setHost("http://meilisearch:7700");
+  searchState.setApiKey("masterKey");
+</script>
+
 <script lang="ts">
   import "../app.css";
 
-  import { setContext } from "svelte";
-  import {
-    getSearchState,
-    INDEX_UID,
-    STATUS,
-  } from "$lib/stores/search-state.svelte";
+  import { INDEX_UID, STATUS } from "$lib/stores/search-state.svelte";
   import SearchBox from "./search-box.svelte";
   import SortBy from "./sort-by.svelte";
 
   const { children } = $props();
-
-  const s = getSearchState("http://127.0.0.1:7700", "masteKey"),
-    searchStateForContext = $derived(s.searchState?.value);
-
-  setContext("state", {
-    get val() {
-      return searchStateForContext;
-    },
-  });
+  const { value } = searchState;
 </script>
 
 <div>
   <main>
-    {#if s.searchState !== null}
-      {@const { status, value } = s.searchState}
+    <div>
+      <a href="./">estimated</a>
+      <a href="./numbered-pagination">numbered</a>
+    </div>
 
-      {#if status === STATUS.OK}
-        <div>
-          <a href="./">estimated</a>
-          <a href="./numbered-pagination">numbered</a>
-        </div>
+    {#if $value !== null}
+      {#if $value.status === STATUS.OK}
+        <SearchBox indexUid={INDEX_UID} searchState={$value.value} />
 
-        <SearchBox indexUid={INDEX_UID} searchState={value} />
-
-        <SortBy indexUid={INDEX_UID} searchState={value} />
+        <SortBy indexUid={INDEX_UID} searchState={$value.value} />
 
         <div>
           {@render children()}
         </div>
-      {:else if status === STATUS.INVALID_API_KEY}
-        <div>
-          <span>{value.name}: {value.message}</span>
-        </div>
-        {#if value.cause !== undefined}
-          <div><span>{JSON.stringify(value.cause)}</span></div>
-        {/if}
       {:else}
-        <span>{value}</span>
+        <span
+          style:color={$value.status === STATUS.INVALID_API_KEY
+            ? "#969600"
+            : "red"}
+          style:white-space="pre-wrap">{$value.value}</span
+        >
       {/if}
     {:else}
-      <span>...waiting</span>
+      <span style:color="blue">loading...</span>
     {/if}
   </main>
 </div>

@@ -1,14 +1,12 @@
 <script lang="ts">
-  import type { SearchState } from "$rootSrc/search_state";
-  import { onDestroy, getContext } from "svelte";
-  import { INDEX_UID } from "$lib/stores/search-state.svelte";
+  import { onDestroy } from "svelte";
+  import { INDEX_UID, searchState } from "$lib/stores/search-state.svelte";
   import { getHitsWithPaginationWidget } from "$lib/stores/hits-with-pagination.svelte";
   import HitsPerPage from "$lib/components/hits-per-page.svelte";
   import Hits from "$lib/components/hits.svelte";
   import Pagination from "$lib/components/pagination.svelte";
 
-  const searchState = getContext<{ val: SearchState }>("state");
-  const w = $derived(getHitsWithPaginationWidget(INDEX_UID, searchState.val));
+  const w = $derived(getHitsWithPaginationWidget(INDEX_UID, searchState.rawValue!));
 
   onDestroy(() => w.unmount());
 </script>
