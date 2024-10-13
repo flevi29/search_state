@@ -32,8 +32,8 @@ const LS_HOST_KEY = "0",
 
 const searchState = (() => {
   const hostAndApiKey = writable<[host: string | null, apiKey: string | null]>([
-    localStorage.getItem(LS_HOST_KEY),
-    localStorage.getItem(LS_API_KEY_KEY),
+    localStorage.getItem(LS_HOST_KEY) || null,
+    localStorage.getItem(LS_API_KEY_KEY) || null,
   ]);
 
   let rawSearchState = $state<SearchState | null>(null),
@@ -41,66 +41,70 @@ const searchState = (() => {
     rawIndexes = $state<IndexObject[] | null>(null);
 
   const searchState = derived<
-    typeof hostAndApiKey,
-    | { status: StatusType["OK"]; value: SearchState }
-    | {
-        status: StatusType["INVALID_API_KEY" | "UNKNOWN_ERROR"];
-        value: string;
-      }
-    | null
-  >(
-    hostAndApiKey,
-    ([host, apiKey], set) => {
-      if (host === null || apiKey === null) {
-        rawSearchState = null;
-        rawIndexes = null;
-        return set(null);
-      }
+      typeof hostAndApiKey,
+      | { status: StatusType["OK"]; value: SearchState }
+      | {
+          status: StatusType["INVALID_API_KEY" | "UNKNOWN_ERROR"];
+          value: string;
+        }
+      | null
+    >(
+      hostAndApiKey,
+      ([host, apiKey], set) => {
+        if (host === null || apiKey === null) {
+          rawSearchState = null;
+          rawIndexes = null;
+          return set(null);
+        }
 
-      try {
-        const meilisearch = new MeiliSearch({ host, apiKey });
+        try {
+          const meilisearch = new MeiliSearch({ host, apiKey });
 
-        const promise = meilisearch
-          .getRawIndexes({ limit: 50 })
-          .then(({ results }) => {
-            const st = new SearchState(meilisearch);
-            st.start();
-            set({ status: STATUS.OK, value: st });
-            rawSearchState = st;
+          const promise = meilisearch
+            .getRawIndexes({ limit: 50 })
+            .then(({ results }) => {
+              const st = new SearchState(meilisearch);
+              st.start();
+              set({ status: STATUS.OK, value: st });
+              rawSearchState = st;
 
-            rawIndexes = results;
+              rawIndexes = results;
 
-            return st.stop;
-          })
-          .catch((error: unknown) => {
-            set({
-              status:
-                error instanceof MeiliSearchApiError &&
-                // https://www.meilisearch.com/docs/reference/errors/error_codes#invalid_api_key
-                error.cause?.code === "invalid_api_key"
-                  ? STATUS.INVALID_API_KEY
-                  : STATUS.UNKNOWN_ERROR,
-              value: getErrorMessage(error),
+              return st.stop;
+            })
+            .catch((error: unknown) => {
+              set({
+                status:
+                  error instanceof MeiliSearchApiError &&
+                  // https://www.meilisearch.com/docs/reference/errors/error_codes#invalid_api_key
+                  error.cause?.code === "invalid_api_key"
+                    ? STATUS.INVALID_API_KEY
+                    : STATUS.UNKNOWN_ERROR,
+                value: getErrorMessage(error),
+              });
+              rawSearchState = null;
+              rawIndexes = null;
             });
-            rawSearchState = null;
-            rawIndexes = null;
-          });
 
-        // stop previous `SearchState`
-        return () => {
-          promise.then((v) => v?.()).catch(console.error);
-        };
-      } catch (error) {
-        set({
-          status: STATUS.UNKNOWN_ERROR,
-          value: getErrorMessage(error),
-        });
-        rawSearchState = null;
-        rawIndexes = null;
-      }
-    },
-    null,
-  );
+          // stop previous `SearchState`
+          return () => {
+            promise.then((v) => v?.()).catch(console.error);
+          };
+        } catch (error) {
+          set({
+            status: STATUS.UNKNOWN_ERROR,
+            value: getErrorMessage(error),
+          });
+          rawSearchState = null;
+          rawIndexes = null;
+        }
+      },
+      null,
+    ),
+    isHostAndApiKeySet = derived(
+      hostAndApiKey,
+      ([host, apiKey]) => host !== null && apiKey !== null,
+    );
 
   return {
     hostAndApiKey: readonly(hostAndApiKey),
@@ -109,6 +113,7 @@ const searchState = (() => {
       localStorage.setItem(LS_HOST_KEY, host);
       localStorage.setItem(LS_API_KEY_KEY, apiKey);
     },
+    isHostAndApiKeySet,
     value: searchState,
     get rawValue() {
       return rawSearchState;

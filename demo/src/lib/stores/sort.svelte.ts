@@ -1,6 +1,6 @@
 import { SortBy, type SortRecord, type SearchState } from "$rootSrc/mod";
 
-// TODO: We need to query this
+
 const sortOptions = {
   default: undefined,
   byScore: ["score:asc"],

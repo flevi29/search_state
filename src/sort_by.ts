@@ -52,7 +52,7 @@ import { getState } from "./util.ts";
 
 type Sort = MultiSearchQuery["sort"];
 
-export type SortRecord = { [TKey: string]: Sort };
+export type SortRecord = Record<string, Sort>;
 
 export class SortBy<T extends SortRecord> {
   #state?: SearchState;
