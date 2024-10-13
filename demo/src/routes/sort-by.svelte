@@ -1,6 +1,5 @@
 <script lang="ts">
   import type { SearchState } from "$rootSrc/mod";
-  import { onDestroy, untrack } from "svelte";
   import {
     getSortByWidget,
     translations,
@@ -23,7 +22,7 @@
     return translations[key] ?? key;
   }
 
-  onDestroy(() => w.unmount());
+  $effect(() => w.unmount);
 </script>
 
 <label for="sort-by">Sort by:</label>

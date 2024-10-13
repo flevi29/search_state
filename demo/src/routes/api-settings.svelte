@@ -23,6 +23,14 @@
     }
   }
 
+  // TODO: Something similar as:
+  // onkeypress={(event) => {
+  //       if (event.key === "Enter") {
+  //         searchState.setHostAndApiKey(localHost, localApiKey);
+  //         close();
+  //       }
+  //     }}
+
   onDestroy(close);
 </script>
 

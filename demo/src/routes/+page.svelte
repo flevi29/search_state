@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
   import { INDEX_UID, searchState } from "$lib/stores/search-state.svelte";
   import { getHitsWithPaginationWidget } from "$lib/stores/hits-with-pagination.svelte";
   import HitsPerPage from "$lib/components/hits-per-page.svelte";
@@ -8,7 +7,7 @@
 
   const w = $derived(getHitsWithPaginationWidget(INDEX_UID, searchState.rawValue!));
 
-  onDestroy(() => w.unmount());
+  $effect(() => w.unmount);
 </script>
 
 {#if w.limit !== null}

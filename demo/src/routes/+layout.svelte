@@ -3,38 +3,39 @@
 
   import { searchState } from "$lib/stores/search-state.svelte";
   import { INDEX_UID, STATUS } from "$lib/stores/search-state.svelte";
-  import HostAndApiKeySelector from "./host-and-api-key-selector.svelte";
+  import ApiSettings from "./api-settings.svelte";
   import SearchBox from "./search-box.svelte";
   import SortBy from "./sort-by.svelte";
 
   const { children } = $props();
-  const { value } = searchState;
+  const { value: searchStateValue } = searchState;
+  const searchStateRune = $derived($searchStateValue);
 </script>
 
 <div>
   <main>
-    <HostAndApiKeySelector />
+    <ApiSettings />
 
     <div>
       <a href="./">estimated</a>
       <a href="./numbered-pagination">numbered</a>
     </div>
 
-    {#if $value !== null}
-      {#if $value.status === STATUS.OK}
-        <SearchBox indexUid={INDEX_UID} searchState={$value.value} />
+    {#if searchStateRune !== null}
+      {@const { status, value } = searchStateRune}
 
-        <SortBy indexUid={INDEX_UID} searchState={$value.value} />
+      {#if status === STATUS.OK}
+        <SearchBox indexUid={INDEX_UID} searchState={value} />
+
+        <SortBy indexUid={INDEX_UID} searchState={value} />
 
         <div>
           {@render children()}
         </div>
       {:else}
         <span
-          style:color={$value.status === STATUS.INVALID_API_KEY
-            ? "#969600"
-            : "red"}
-          style:white-space="pre-wrap">{$value.value}</span
+          style:color={status === STATUS.INVALID_API_KEY ? "#969600" : "red"}
+          style:white-space="pre-wrap">{value}</span
         >
       {/if}
     {:else}

@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
   import { INDEX_UID, searchState } from "$lib/stores/search-state.svelte";
   import { getHitsWithNumberedPaginationWidget } from "$lib/stores/hits-with-numbered-pagination.svelte";
   import HitsPerPage from "$lib/components/hits-per-page.svelte";
@@ -10,7 +9,7 @@
     getHitsWithNumberedPaginationWidget(INDEX_UID, searchState.rawValue!),
   );
 
-  onDestroy(() => w.unmount());
+  $effect(() => w.unmount);
 </script>
 
 {#if w.hitsPerPage !== null}
