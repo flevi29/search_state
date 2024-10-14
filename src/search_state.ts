@@ -1,7 +1,7 @@
 import type {
   MeiliSearch,
   MultiSearchQuery,
-  MultiSearchResponse,
+  MultiSearchResult,
 } from "meilisearch";
 
 type ErrorCallback = (source: unknown, error: unknown) => void;
@@ -9,7 +9,7 @@ type ErrorCallback = (source: unknown, error: unknown) => void;
 type SearchQueryMap = Map<string, MultiSearchQuery>;
 
 type QueryListener = (query: MultiSearchQuery) => void;
-type ResponseListener = (response: MultiSearchResponse) => void;
+type ResponseListener = (response: MultiSearchResult<unknown>) => void;
 
 // TODO: Each widget should have a static ID + indexUid stored in state, this will tell the widgets
 //        whether there's already a widget of the same type on the same indexUid in state, so they can err
@@ -47,10 +47,13 @@ export class SearchState {
   //   return () => this.#queryMapListeners.delete(listener);
   // }
 
-  #responseListeners = new Set<ResponseListener>();
-  addResponseListener(listener: ResponseListener): () => void {
-    this.#responseListeners.add(listener);
-    return () => void this.#responseListeners.delete(listener);
+  #responseListeners = new Map<string, ResponseListener>();
+  addResponseListener(
+    indexUid: string,
+    listener: ResponseListener,
+  ): () => void {
+    this.#responseListeners.set(indexUid, listener);
+    return () => void this.#responseListeners.delete(indexUid);
   }
 
   #to: ReturnType<typeof setTimeout> | null = null;
@@ -79,14 +82,29 @@ export class SearchState {
           this.#ac = new AbortController();
         }
 
-        const response = await this.#meilisearch.multiSearch(
+        const { results } = await this.#meilisearch.multiSearch(
           { queries: Array.from(this.#queryState.values()) },
           { signal: this.#ac.signal },
         );
 
-        // TODO: Call only the ones where the indexUid matches
-        for (const listener of this.#responseListeners) {
-          listener(response);
+        const resultsMap = new Map<string, MultiSearchResult<unknown>>();
+        for (const result of results) {
+          resultsMap.set(result.indexUid, result);
+        }
+
+        for (const [indexUid, listener] of this.#responseListeners) {
+          const result = resultsMap.get(indexUid);
+          if (result === undefined) {
+            this.#errorCallback(
+              this,
+              new Error(
+                `listener for indexUid "${indexUid}" did not recieve a result from search request`,
+              ),
+            );
+            continue;
+          }
+
+          listener(result);
         }
       })()
         .catch((error) => {
@@ -169,7 +187,7 @@ export class SearchState {
   readonly start = (): void => {
     if (!this.#isStarted) {
       this.#isStarted = true;
-      this.#search(null);
+      this.#search(this);
     }
   };
 

@@ -1,4 +1,4 @@
-import { assertEquals, assertExists, assertIsError } from "@std/assert";
+import { assertEquals, assertExists } from "@std/assert";
 import { stub } from "@std/testing/mock";
 import { MeiliSearch } from "meilisearch";
 import { SearchBox, SearchState } from "../src/mod.ts";

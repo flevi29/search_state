@@ -178,94 +178,84 @@ export class HitsWithPagination<T extends Record<string, any>> {
       },
     );
 
-    this.#removeResponseListener = state.addResponseListener(({ results }) => {
-      for (const result of results) {
-        if (result.indexUid === indexUid) {
-          const { hits, estimatedTotalHits, limit, offset } = result;
-
-          if (
-            estimatedTotalHits === undefined ||
-            limit === undefined ||
-            offset === undefined
-          ) {
-            state.errorCallback(
-              this,
-              new Error(
-                "one or more of `estimatedTotalHits`, `limit`, `offset` is undefined",
-              ),
-            );
-            return;
-          }
-
-          if (!isOffsetLimitCorrect(offset, limit)) {
-            state.errorCallback(
-              this,
-              new Error(
-                `bad offset and/or limit values (${
-                  JSON.stringify({
-                    limit,
-                    offset,
-                  })
-                })`,
-              ),
-            );
-            return;
-          }
-
-          if (estimatedTotalHits !== this.#estimatedTotalHits) {
-            this.#estimatedTotalHits = estimatedTotalHits;
-            estimatedTotalHitsListener(estimatedTotalHits);
-          }
-
-          let isLimitOrOffsetChanged = false;
-
-          if (limit !== this.#limit) {
-            this.#limit = limit;
-            isLimitOrOffsetChanged = true;
-            limitListener(limit);
-          }
-
-          if (offset !== this.#offset) {
-            this.#offset = offset;
-            isLimitOrOffsetChanged = true;
-
-            this.#setHasPreviousAndCallListener();
-          }
-
-          if (isLimitOrOffsetChanged) {
-            const page = this.#offset / (this.#limit - 1);
-
-            if (page !== this.#page) {
-              this.#page = page;
-              pageListener(page + 1);
-            }
-          }
-
-          if (hits.length === limit) {
-            hitsListener(<Hits<T>> hits.slice(0, limit - 1));
-
-            if (this.#hasNext !== true) {
-              this.#hasNext = true;
-              hasNextListener(true);
-            }
-          } else {
-            hitsListener(<Hits<T>> hits);
-
-            if (this.#hasNext !== false) {
-              this.#hasNext = false;
-              hasNextListener(false);
-            }
-          }
-
+    this.#removeResponseListener = state.addResponseListener(
+      indexUid,
+      ({ hits, estimatedTotalHits, limit, offset }) => {
+        if (
+          estimatedTotalHits === undefined ||
+          limit === undefined ||
+          offset === undefined
+        ) {
+          state.errorCallback(
+            this,
+            new Error(
+              "one or more of `estimatedTotalHits`, `limit`, `offset` is undefined",
+            ),
+          );
           return;
         }
-      }
 
-      state.errorCallback(
-        this,
-        new Error(`no response returned for index \`${indexUid}\``),
-      );
-    });
+        if (!isOffsetLimitCorrect(offset, limit)) {
+          state.errorCallback(
+            this,
+            new Error(
+              `bad offset and/or limit values (${
+                JSON.stringify({
+                  limit,
+                  offset,
+                })
+              })`,
+            ),
+          );
+          return;
+        }
+
+        if (estimatedTotalHits !== this.#estimatedTotalHits) {
+          this.#estimatedTotalHits = estimatedTotalHits;
+          estimatedTotalHitsListener(estimatedTotalHits);
+        }
+
+        let isLimitOrOffsetChanged = false;
+
+        if (limit !== this.#limit) {
+          this.#limit = limit;
+          isLimitOrOffsetChanged = true;
+          limitListener(limit);
+        }
+
+        if (offset !== this.#offset) {
+          this.#offset = offset;
+          isLimitOrOffsetChanged = true;
+
+          this.#setHasPreviousAndCallListener();
+        }
+
+        if (isLimitOrOffsetChanged) {
+          const page = this.#offset / (this.#limit - 1);
+
+          if (page !== this.#page) {
+            this.#page = page;
+            pageListener(page + 1);
+          }
+        }
+
+        if (hits.length === limit) {
+          hitsListener(<Hits<T>> hits.slice(0, limit - 1));
+
+          if (this.#hasNext !== true) {
+            this.#hasNext = true;
+            hasNextListener(true);
+          }
+        } else {
+          hitsListener(<Hits<T>> hits);
+
+          if (this.#hasNext !== false) {
+            this.#hasNext = false;
+            hasNextListener(false);
+          }
+        }
+      },
+    );
 
     this.#state = state;
     this.#indexUid = indexUid;

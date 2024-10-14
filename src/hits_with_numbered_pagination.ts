@@ -91,51 +91,41 @@ export class HitsWithNumberedPagination<
       },
     );
 
-    this.#removeResponseListener = state.addResponseListener(({ results }) => {
-      for (const result of results) {
-        if (result.indexUid === indexUid) {
-          const { hits, totalHits, totalPages, page } = result;
-
-          if (
-            totalHits === undefined ||
-            totalPages === undefined ||
-            page === undefined
-          ) {
-            state.errorCallback(
-              this,
-              new Error(
-                "one or more of `totalHits`, `totalPages`, `page` is undefined",
-              ),
-            );
-            return;
-          }
-
-          hitsListener(<Hits<T>> hits);
-
-          if (totalHits !== this.#totalHits) {
-            this.#totalHits = totalHits;
-            totalHitsListener(totalHits);
-          }
-
-          if (totalPages !== this.#totalPages) {
-            this.#totalPages = totalPages;
-            totalPagesListener(totalPages);
-          }
-
-          if (page !== this.#page) {
-            this.#page = page;
-            pageListener(page);
-          }
-
+    this.#removeResponseListener = state.addResponseListener(
+      indexUid,
+      ({ hits, totalHits, totalPages, page }) => {
+        if (
+          totalHits === undefined ||
+          totalPages === undefined ||
+          page === undefined
+        ) {
+          state.errorCallback(
+            this,
+            new Error(
+              "one or more of `totalHits`, `totalPages`, `page` is undefined",
+            ),
+          );
           return;
         }
-      }
 
-      state.errorCallback(
-        this,
-        new Error(`no response returned for index \`${indexUid}\``),
-      );
-    });
+        hitsListener(<Hits<T>> hits);
+
+        if (totalHits !== this.#totalHits) {
+          this.#totalHits = totalHits;
+          totalHitsListener(totalHits);
+        }
+
+        if (totalPages !== this.#totalPages) {
+          this.#totalPages = totalPages;
+          totalPagesListener(totalPages);
+        }
+
+        if (page !== this.#page) {
+          this.#page = page;
+          pageListener(page);
+        }
+      },
+    );
 
     this.#state = state;
     this.#indexUid = indexUid;
