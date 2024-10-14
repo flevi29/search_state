@@ -44,7 +44,7 @@ import { getState } from "./util.ts";
 
 type Q = NonNullable<MultiSearchQuery["q"]>;
 
-// @TODO:
+// TODO:
 type MatchingStrategy = NonNullable<MultiSearchQuery["matchingStrategy"]>;
 type AttributesToSearchOn = NonNullable<
   MultiSearchQuery["attributesToSearchOn"]
@@ -57,7 +57,7 @@ export class SearchBox {
   #q?: Q;
 
   constructor(state: SearchState, indexUid: string, qListener: (q: Q) => void) {
-    // @TODO: This should be more of a Router thing
+    // TODO: This should be more of a Router thing
     // this.#removeListener = state.addQueryMapListener((initiator, queryMap) => {
     //   if (Object.is(initiator, this)) {
     //     return;
@@ -84,26 +84,22 @@ export class SearchBox {
     if (q !== this.#q) {
       this.#q = q;
 
-      state.changeQuery(this, this.#indexUid, (indexQuery) => {
-        indexQuery.q = q;
-
-        if (indexQuery.offset !== undefined) {
-          delete indexQuery.offset;
-        }
-
-        if (indexQuery.page !== undefined) {
-          delete indexQuery.page;
-        }
-      });
+      state.changeQueryAndResetPagination(
+        this,
+        this.#indexUid,
+        (indexQuery) => void (indexQuery.q = q),
+      );
     }
   };
 
   readonly unmount = (): void => {
     const state = getState(this.#state);
 
-    state.changeQuery(this, this.#indexUid, (indexQuery) => {
-      delete indexQuery.q;
-    });
+    state.changeQueryAndResetPagination(
+      this,
+      this.#indexUid,
+      (indexQuery) => void delete indexQuery.q,
+    );
 
     this.#state = undefined;
   };

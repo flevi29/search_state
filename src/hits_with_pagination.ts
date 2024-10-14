@@ -93,12 +93,14 @@ function isOffsetLimitCorrect(offset: number, limit: number): boolean {
 export class HitsWithPagination<T extends Record<string, any>> {
   #state?: SearchState;
   readonly #indexUid: string;
-  readonly #removeQueryMapListener: () => void;
+  readonly #removeResetPaginationListener: () => void;
   readonly #removeResponseListener: () => void;
 
   readonly #limitListener: HitsWithPaginationOptions<T>["limitListener"];
   readonly #pageListener: HitsWithPaginationOptions<T>["pageListener"];
-  readonly #hasPreviousListener: HitsWithPaginationOptions<T>["hasPreviousListener"];
+  readonly #hasPreviousListener: HitsWithPaginationOptions<
+    T
+  >["hasPreviousListener"];
   readonly #hasNextListener: HitsWithPaginationOptions<T>["hasNextListener"];
 
   #estimatedTotalHits?: EstimatedTotalHits;
@@ -132,113 +134,48 @@ export class HitsWithPagination<T extends Record<string, any>> {
       pageListener,
       hasPreviousListener,
       hasNextListener,
-    }: HitsWithPaginationOptions<T>
+    }: HitsWithPaginationOptions<T>,
   ) {
     const initialLimitPlusOne = initialLimit + 1;
 
-    // this.#removeQueryMapListener = state.addQueryMapListener(
-    //   (initiator, queryMap) => {
-    //     if (Object.is(initiator, this)) {
-    //       return;
-    //     }
+    this.#removeResetPaginationListener = state.addResetPaginationListener(
+      indexUid,
+      (query) => {
+        // TODO: Maybe over-complicated, simplify
+        let { limit, offset } = query;
 
-    //     const indexQuery = queryMap.get(indexUid);
-    //     if (indexQuery !== undefined) {
-    //       let { limit, offset } = indexQuery;
-
-    //       if (offset === undefined) {
-    //         indexQuery.offset = offset = 0;
-    //       }
-
-    //       if (limit === undefined) {
-    //         indexQuery.limit = limit = initialLimitPlusOne;
-    //       }
-
-    //       if (!isOffsetLimitCorrect(offset, limit)) {
-    //         state.errorCallback(
-    //           this,
-    //           new Error(
-    //             `bad offset and/or limit values (${JSON.stringify({
-    //               limit,
-    //               offset,
-    //             })})`
-    //           )
-    //         );
-    //         return;
-    //       }
-
-    //       let isLimitOrOffsetChanged = false;
-
-    //       if (limit !== this.#limit) {
-    //         this.#limit = limit;
-    //         isLimitOrOffsetChanged = true;
-    //         limitListener(limit);
-    //       }
-
-    //       if (offset !== this.#offset) {
-    //         this.#offset = offset;
-    //         isLimitOrOffsetChanged = true;
-
-    //         this.#setHasPreviousAndCallListener();
-    //       }
-
-    //       if (isLimitOrOffsetChanged) {
-    //         const page = this.#offset / (this.#limit - 1);
-
-    //         if (page !== this.#page) {
-    //           this.#page = page;
-    //           pageListener(page + 1);
-    //         }
-    //       }
-    //     }
-    //   }
-    // );
-
-    this.#removeQueryMapListener = state.addQueryMapListener(
-      (initiator, queryMap) => {
-        if (Object.is(initiator, this)) {
-          return;
+        if (offset === undefined) {
+          query.offset = offset = 0;
         }
 
-        const indexQuery = queryMap.get(indexUid);
-        if (indexQuery !== undefined) {
-          // @TODO: the only thing that can matter here, is that pagination is to be reset
-          //        so ideally that should be signalled instead
-          let { limit, offset } = indexQuery;
+        if (limit === undefined) {
+          query.limit = limit = initialLimitPlusOne;
+        }
 
-          if (offset === undefined) {
-            indexQuery.offset = offset = 0;
-          }
+        let isLimitOrOffsetChanged = false;
 
-          if (limit === undefined) {
-            indexQuery.limit = limit = initialLimitPlusOne;
-          }
+        if (limit !== this.#limit) {
+          this.#limit = limit;
+          isLimitOrOffsetChanged = true;
+          limitListener(limit);
+        }
 
-          let isLimitOrOffsetChanged = false;
+        if (offset !== this.#offset) {
+          this.#offset = offset;
+          isLimitOrOffsetChanged = true;
 
-          if (limit !== this.#limit) {
-            this.#limit = limit;
-            isLimitOrOffsetChanged = true;
-            limitListener(limit);
-          }
+          this.#setHasPreviousAndCallListener();
+        }
 
-          if (offset !== this.#offset) {
-            this.#offset = offset;
-            isLimitOrOffsetChanged = true;
+        if (isLimitOrOffsetChanged) {
+          const page = this.#offset / (this.#limit - 1);
 
-            this.#setHasPreviousAndCallListener();
-          }
-
-          if (isLimitOrOffsetChanged) {
-            const page = this.#offset / (this.#limit - 1);
-
-            if (page !== this.#page) {
-              this.#page = page;
-              pageListener(page + 1);
-            }
+          if (page !== this.#page) {
+            this.#page = page;
+            pageListener(page + 1);
           }
         }
-      }
+      },
     );
 
     this.#removeResponseListener = state.addResponseListener(({ results }) => {
@@ -254,8 +191,8 @@ export class HitsWithPagination<T extends Record<string, any>> {
             state.errorCallback(
               this,
               new Error(
-                "one or more of `estimatedTotalHits`, `limit`, `offset` is undefined"
-              )
+                "one or more of `estimatedTotalHits`, `limit`, `offset` is undefined",
+              ),
             );
             return;
           }
@@ -264,11 +201,13 @@ export class HitsWithPagination<T extends Record<string, any>> {
             state.errorCallback(
               this,
               new Error(
-                `bad offset and/or limit values (${JSON.stringify({
-                  limit,
-                  offset,
-                })})`
-              )
+                `bad offset and/or limit values (${
+                  JSON.stringify({
+                    limit,
+                    offset,
+                  })
+                })`,
+              ),
             );
             return;
           }
@@ -303,14 +242,14 @@ export class HitsWithPagination<T extends Record<string, any>> {
           }
 
           if (hits.length === limit) {
-            hitsListener(<Hits<T>>hits.slice(0, limit - 1));
+            hitsListener(<Hits<T>> hits.slice(0, limit - 1));
 
             if (this.#hasNext !== true) {
               this.#hasNext = true;
               hasNextListener(true);
             }
           } else {
-            hitsListener(<Hits<T>>hits);
+            hitsListener(<Hits<T>> hits);
 
             if (this.#hasNext !== false) {
               this.#hasNext = false;
@@ -324,7 +263,7 @@ export class HitsWithPagination<T extends Record<string, any>> {
 
       state.errorCallback(
         this,
-        new Error(`no response returned for index \`${indexUid}\``)
+        new Error(`no response returned for index \`${indexUid}\``),
       );
     });
 
@@ -365,9 +304,9 @@ export class HitsWithPagination<T extends Record<string, any>> {
       this.#hasNext = false;
       this.#hasNextListener(false);
 
-      state.changeQuery(this, this.#indexUid, (indexQuery) => {
-        indexQuery.limit = limitPlusOne;
-        indexQuery.offset = 0;
+      state.changeQuery(this, this.#indexUid, (query) => {
+        query.limit = limitPlusOne;
+        query.offset = 0;
       });
     }
   };
@@ -385,9 +324,11 @@ export class HitsWithPagination<T extends Record<string, any>> {
     this.#pageListener(this.#page + 1);
     this.#setHasPreviousAndCallListener();
 
-    state.changeQuery(this, this.#indexUid, (indexQuery) => {
-      indexQuery.offset = this.#offset;
-    });
+    state.changeQuery(
+      this,
+      this.#indexUid,
+      (query) => void (query.offset = this.#offset),
+    );
   };
 
   readonly nextPage = (): void => {
@@ -406,20 +347,22 @@ export class HitsWithPagination<T extends Record<string, any>> {
     this.#hasNext = false;
     this.#hasNextListener(false);
 
-    state.changeQuery(this, this.#indexUid, (indexQuery) => {
-      indexQuery.offset = this.#offset;
-    });
+    state.changeQuery(
+      this,
+      this.#indexUid,
+      (query) => void (query.offset = this.#offset),
+    );
   };
 
   readonly unmount = (): void => {
     const state = getState(this.#state);
 
-    this.#removeQueryMapListener();
+    this.#removeResetPaginationListener();
     this.#removeResponseListener();
 
-    state.changeQuery(this, this.#indexUid, (indexQuery) => {
-      delete indexQuery.offset;
-      delete indexQuery.limit;
+    state.changeQuery(this, this.#indexUid, (query) => {
+      delete query.offset;
+      delete query.limit;
     });
 
     this.#state = undefined;

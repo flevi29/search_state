@@ -32,8 +32,8 @@ const searchState = (() => {
   ]);
 
   let rawSearchState = $state<SearchState | null>(null),
-    // TODO: Query all indexes for more details
     indexes = $state<Record<string, IndexStats> | null>(null),
+    // TODO: when this changes many setting should reset
     selectedIndex = $state<string | null>(
       localStorage.getItem(LS_INDEX_KEY) || null,
     );
@@ -72,6 +72,7 @@ const searchState = (() => {
               ),
             )
             .then((indexesWithStats) => {
+              // TODO: errorCallback second argument
               const st = new SearchState(meilisearch);
               st.start();
               set({ status: STATUS.OK, value: st });

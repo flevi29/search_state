@@ -78,9 +78,9 @@ export class SortBy<T extends SortRecord> {
       sortOptions: T;
       defaultSortOptionKey: keyof T;
       selectedListener: (key: keyof T) => void;
-    }
+    },
   ) {
-    // @TODO: This should be more of a Router thing
+    // TODO: This should be more of a Router thing
     // this.#removeListener = state.addQueryMapListener((initiator, queryMap) => {
     //   if (Object.is(initiator, this)) {
     //     return;
@@ -94,7 +94,7 @@ export class SortBy<T extends SortRecord> {
     //     const key = this.#optionsBySort.get(stringifiedSort);
 
     //     if (key === undefined) {
-    //       // @TODO: Better error message
+    //       // TODO: Better error message
     //       state.errorCallback(
     //         this,
     //         new Error("sort option from query is not registered as an option")
@@ -119,12 +119,12 @@ export class SortBy<T extends SortRecord> {
       const stringifiedSort = JSON.stringify(sort ?? null);
 
       if (this.#optionsByKey.has(key)) {
-        // @TODO: Better error message
+        // TODO: Better error message
         throw new Error("cannot have same key for more options");
       }
 
       if (this.#optionsBySort.has(stringifiedSort)) {
-        // @TODO: Better error message
+        // TODO: Better error message
         throw new Error("cannot have same value for more options");
       }
 
@@ -134,7 +134,7 @@ export class SortBy<T extends SortRecord> {
 
     // default sort
     const defaultSort = sortOptions[defaultSortOptionKey];
-    state.changeQuery(this, indexUid, (indexQuery) => {
+    state.changeQueryAndResetPagination(this, indexUid, (indexQuery) => {
       indexQuery.sort = defaultSort;
       selectedListener(defaultSortOptionKey);
     });
@@ -152,26 +152,22 @@ export class SortBy<T extends SortRecord> {
       this.#key = key;
       const sort: Sort = JSON.parse(stringifiedSort) ?? undefined;
 
-      state.changeQuery(this, this.#indexUid, (indexQuery) => {
-        indexQuery.sort = sort;
-
-        if (indexQuery.offset !== undefined) {
-          delete indexQuery.offset;
-        }
-
-        if (indexQuery.page !== undefined) {
-          delete indexQuery.page;
-        }
-      });
+      state.changeQueryAndResetPagination(
+        this,
+        this.#indexUid,
+        (indexQuery) => void (indexQuery.sort = sort),
+      );
     }
   };
 
   readonly unmount = (): void => {
     const state = getState(this.#state);
 
-    state.changeQuery(this, this.#indexUid, (indexQuery) => {
-      delete indexQuery.sort;
-    });
+    state.changeQueryAndResetPagination(
+      this,
+      this.#indexUid,
+      (indexQuery) => void delete indexQuery.sort,
+    );
 
     this.#state = undefined;
   };

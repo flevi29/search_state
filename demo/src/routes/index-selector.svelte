@@ -6,6 +6,8 @@
 <select
   id="index"
   value={searchState.selectedIndex}
+  disabled={searchState.indexes !== null &&
+    Object.keys(searchState.indexes).length === 1}
   oninput={function () {
     searchState.setSelectedIndex(this.value);
   }}

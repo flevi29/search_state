@@ -6,7 +6,8 @@
   import ApiSettings from "./api-settings.svelte";
   import IndexSelector from "./index-selector.svelte";
   import SearchBox from "./search-box.svelte";
-  import SortBy from "./sort-by.svelte";
+  // TODO: Fix this widget
+  // import SortBy from "./sort-by.svelte";
 
   const { children } = $props();
   const { value: searchStateValue, isHostAndApiKeySet } = searchState;
@@ -31,7 +32,7 @@
             searchState={value}
           />
 
-          <SortBy indexUid={searchState.selectedIndex!} searchState={value} />
+          <!-- <SortBy indexUid={searchState.selectedIndex!} searchState={value} /> -->
 
           <div>
             <a href="./">estimated</a>

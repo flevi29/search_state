@@ -52,14 +52,16 @@ type HitsWithNumberedPaginationOptions<T extends Record<string, any>> = {
 const PAGE_ONE = 1;
 
 export class HitsWithNumberedPagination<
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > {
   #state?: SearchState;
   readonly #indexUid: string;
-  readonly #removeParamsMapListener: () => void;
+  readonly #removeResetPaginationListener: () => void;
   readonly #removeResponseListener: () => void;
 
-  readonly #hitsPerPageListener: HitsWithNumberedPaginationOptions<T>["hitsPerPageListener"];
+  readonly #hitsPerPageListener: HitsWithNumberedPaginationOptions<
+    T
+  >["hitsPerPageListener"];
   readonly #pageListener: HitsWithNumberedPaginationOptions<T>["pageListener"];
 
   #hitsPerPage: HitsPerPage;
@@ -77,40 +79,16 @@ export class HitsWithNumberedPagination<
       totalHitsListener,
       totalPagesListener,
       pageListener,
-    }: HitsWithNumberedPaginationOptions<T>
+    }: HitsWithNumberedPaginationOptions<T>,
   ) {
-    this.#removeParamsMapListener = state.addQueryMapListener(
-      (initiator, queryMap) => {
-        if (Object.is(initiator, this)) {
-          return;
+    this.#removeResetPaginationListener = state.addResetPaginationListener(
+      indexUid,
+      (query) => {
+        if (query.page !== PAGE_ONE) {
+          query.page = this.#page = PAGE_ONE;
+          pageListener(PAGE_ONE);
         }
-
-        const indexQuery = queryMap.get(indexUid);
-
-        if (indexQuery !== undefined) {
-          // @TODO: the only thing that can matter here, is that pagination is to be reset
-          //        so ideally that should be signalled instead
-          let { page, hitsPerPage } = indexQuery;
-
-          if (page === undefined) {
-            indexQuery.page = page = PAGE_ONE;
-          }
-
-          if (hitsPerPage === undefined) {
-            indexQuery.hitsPerPage = hitsPerPage = initialHitsPerPage;
-          }
-
-          if (page !== this.#page) {
-            this.#page = page;
-            pageListener(page);
-          }
-
-          if (hitsPerPage !== this.#hitsPerPage) {
-            this.#hitsPerPage = hitsPerPage;
-            hitsPerPageListener(hitsPerPage);
-          }
-        }
-      }
+      },
     );
 
     this.#removeResponseListener = state.addResponseListener(({ results }) => {
@@ -126,13 +104,13 @@ export class HitsWithNumberedPagination<
             state.errorCallback(
               this,
               new Error(
-                "one or more of `totalHits`, `totalPages`, `page` is undefined"
-              )
+                "one or more of `totalHits`, `totalPages`, `page` is undefined",
+              ),
             );
             return;
           }
 
-          hitsListener(<Hits<T>>hits);
+          hitsListener(<Hits<T>> hits);
 
           if (totalHits !== this.#totalHits) {
             this.#totalHits = totalHits;
@@ -155,7 +133,7 @@ export class HitsWithNumberedPagination<
 
       state.errorCallback(
         this,
-        new Error(`no response returned for index \`${indexUid}\``)
+        new Error(`no response returned for index \`${indexUid}\``),
       );
     });
 
@@ -197,16 +175,18 @@ export class HitsWithNumberedPagination<
       this.#page = page;
       this.#pageListener(page);
 
-      state.changeQuery(this, this.#indexUid, (indexQuery) => {
-        indexQuery.page = page;
-      });
+      state.changeQuery(
+        this,
+        this.#indexUid,
+        (indexQuery) => void (indexQuery.page = page),
+      );
     }
   };
 
   readonly unmount = (): void => {
     const state = getState(this.#state);
 
-    this.#removeParamsMapListener();
+    this.#removeResetPaginationListener();
     this.#removeResponseListener();
 
     state.changeQuery(this, this.#indexUid, (indexQuery) => {
