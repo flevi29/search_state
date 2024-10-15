@@ -2,7 +2,7 @@ name: Deno
 
 on:
   push:
-    branches: ["Barabasbalazs-setup-test-workflow", "main"]
+    branches: ["main"]
   pull_request:
     branches: ["main"]
 
@@ -32,6 +32,7 @@ jobs:
         with:
           deno-version: v2.x
 
+      #disabled for now, since this will fail the action
       # - name: Run linter
       #   run: deno lint
 
