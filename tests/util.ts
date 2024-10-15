@@ -1,11 +1,12 @@
 import { MeiliSearch } from "meilisearch";
 import { SearchState } from "../src/mod.ts";
 
-const host = Deno.env.get("HOST") ?? "127.0.0.1:7700",
+const host = Deno.env.get("HOST") ?? "http://127.0.0.1",
+  port = Deno.env.get("PORT") ?? "7700",
   apiKey = Deno.env.get("API_KEY") ?? "masterKey";
 
 export async function pingAndGetMeiliSearch(): Promise<MeiliSearch> {
-  const client = new MeiliSearch({ host: host, apiKey });
+  const client = new MeiliSearch({ host: `${host}:${port}`, apiKey });
 
   const { status } = await client.health();
   if (status === "available") {
