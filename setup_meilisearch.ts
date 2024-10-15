@@ -39,11 +39,11 @@ await meilisearch.waitForTask(
       { id: 5, title: "Moana", genres: ["Fantasy", "Action"], score: 60 },
       { id: 6, title: "Philadelphia", genres: ["Drama"], score: 1000 },
     ])
-  ).taskUid
+  ).taskUid,
 );
 
 await meilisearch.waitForTask(
   (
     await index.updateSettings({ sortableAttributes: ["score", "title"] })
-  ).taskUid
+  ).taskUid,
 );

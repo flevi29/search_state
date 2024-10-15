@@ -17,10 +17,10 @@ jobs:
       meilisearch:
         image: getmeili/meilisearch:latest
         env:
-          MEILI_MASTER_KEY: 'masterKey'
-          MEILI_NO_ANALYTICS: 'true'
+          MEILI_MASTER_KEY: "masterKey"
+          MEILI_NO_ANALYTICS: "true"
         ports:
-          - '7700:7700'
+          - "7700:7700"
 
     name: Deno tests
     steps:
@@ -32,9 +32,11 @@ jobs:
         with:
           deno-version: v2.x
 
-      #disabled for now, since this will fail the action
-      # - name: Run linter
-      #   run: deno lint
+      - name: Check formatting
+        run: deno task fmt --check
+
+      - name: Run linter
+        run: deno lint
 
       - name: Run tests
         run: deno test --allow-env --allow-net

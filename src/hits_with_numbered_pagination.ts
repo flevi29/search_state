@@ -36,10 +36,12 @@ import { getState } from "./util.ts";
 
 type HitsPerPage = NonNullable<MultiSearchQuery["hitsPerPage"]>;
 type Page = NonNullable<MultiSearchQuery["page"]>;
+// deno-lint-ignore no-explicit-any
 type Hits<T extends Record<string, any>> = MultiSearchResult<T>["hits"];
 type TotalHits = NonNullable<MultiSearchResult<never>["totalHits"]>;
 type TotalPages = NonNullable<MultiSearchResult<never>["totalPages"]>;
 
+// deno-lint-ignore no-explicit-any
 type HitsWithNumberedPaginationOptions<T extends Record<string, any>> = {
   initialHitsPerPage: HitsPerPage;
   hitsPerPageListener: (hitsPerPage: HitsPerPage) => void;
@@ -52,6 +54,7 @@ type HitsWithNumberedPaginationOptions<T extends Record<string, any>> = {
 const PAGE_ONE = 1;
 
 export class HitsWithNumberedPagination<
+  // deno-lint-ignore no-explicit-any
   T extends Record<string, any> = Record<string, any>,
 > {
   #state?: SearchState;

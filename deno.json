@@ -2,7 +2,8 @@
   "version": "0.1.0",
   "tasks": {
     "run-docker": "docker run -p 7700:7700 --rm getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics",
-    "doc-lint": ""
+    "doc-lint": "",
+    "fmt": "deno fmt --ignore=\"coverage,demo\""
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.41.3",

@@ -59,6 +59,7 @@ type ShowRankingScoreDetails = NonNullable<
   MultiSearchQuery["showRankingScoreDetails"]
 >;
 
+// deno-lint-ignore no-explicit-any
 type Hits<T extends Record<string, any>> = MultiSearchResult<T>["hits"];
 type EstimatedTotalHits = NonNullable<
   MultiSearchResult<never>["estimatedTotalHits"]
@@ -66,6 +67,7 @@ type EstimatedTotalHits = NonNullable<
 type Limit = NonNullable<MultiSearchQuery["limit"]>;
 type Offset = NonNullable<MultiSearchQuery["offset"]>;
 
+// deno-lint-ignore no-explicit-any
 type HitsWithPaginationOptions<T extends Record<string, any>> = {
   initialLimit: number;
   hitsListener: (hits: Hits<T>) => void;
@@ -90,6 +92,7 @@ function isOffsetLimitCorrect(offset: number, limit: number): boolean {
   return limit > 1 && offset % (limit - 1) === 0;
 }
 
+// deno-lint-ignore no-explicit-any
 export class HitsWithPagination<T extends Record<string, any>> {
   #state?: SearchState;
   readonly #indexUid: string;

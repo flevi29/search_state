@@ -25,27 +25,11 @@ export class SearchState {
 
   constructor(
     meilisearch: MeiliSearch,
-    errorCallback: ErrorCallback = (_initiator, error) => console.error(error),
+    errorCallback: ErrorCallback = (_, error) => console.error(error),
   ) {
     this.#meilisearch = meilisearch;
     this.#errorCallback = errorCallback;
   }
-
-  // TODO: How needed is this thing actually? Outside of the potential router,
-  //        only rarely do widgets mess with each others properties.
-  //        It is needed but not in the way we're using it now. It's needed for when
-  //        widgets might mess with each others params, something that is rare, in particular for
-  //        pagination any change that's not from within will need to reset it.
-  //        For facets, current refinements will be able to mess with it. And probably more similar cases.
-  //        So it is needed, albeit rarely.
-  //        !! Router will work directly with the widgets !!
-  //        Instead we should have particular listeners, one for resetting pagination, one for resetting/removing some facets, etc.,
-  //        and the widgets that should react to these events will listen to them.
-  // #queryMapListeners = new Set<QueryMapListener>();
-  // addQueryMapListener(listener: QueryMapListener) {
-  //   this.#queryMapListeners.add(listener);
-  //   return () => this.#queryMapListeners.delete(listener);
-  // }
 
   #responseListeners = new Map<string, ResponseListener>();
   addResponseListener(
