@@ -56,7 +56,7 @@ export class SearchBox {
 
   #q?: Q;
 
-  constructor(state: SearchState, indexUid: string, qListener: (q: Q) => void) {
+  constructor(state: SearchState, indexUid: string) {
     // TODO: This should be more of a Router thing
     // this.#removeListener = state.addQueryMapListener((initiator, queryMap) => {
     //   if (Object.is(initiator, this)) {
