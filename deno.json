@@ -3,7 +3,10 @@
   "tasks": {
     "test": "deno test -E -N",
     "fmt": "deno fmt --ignore=\"coverage,demo\"",
-    "lint": "deno lint src tests"
+    "lint": "deno lint src tests",
+    "run-docker": "docker run -p 7700:7700 --rm getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics",
+    "doc-lint": "",
+    "setup:meili": "deno --allow-net scripts/setup_meilisearch.ts"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.41.3",

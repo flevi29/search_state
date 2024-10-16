@@ -2,12 +2,13 @@ import { assertEquals, assertExists } from "@std/assert";
 import { spy } from "@std/testing/mock";
 import { SearchState } from "../src/mod.ts";
 import { getSearchState, pingAndGetMeiliSearch } from "./util.ts";
-import { createPokemon } from "./models/pokemon.ts";
+import { createDocumentsAndRelease } from "../scripts/create_documents.ts";
+import { MOVIES } from "../models/index.ts";
 
 Deno.test(`Test ${SearchState.name}`, async (t) => {
   const client = await pingAndGetMeiliSearch();
   const INDEX = `${SearchState.name}-test`;
-  await using _ = await createPokemon(client, INDEX);
+  await using _ = await createDocumentsAndRelease(client, INDEX, MOVIES);
   using searchState = getSearchState(client);
 
   await t.step(

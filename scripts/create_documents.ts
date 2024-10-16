@@ -1,9 +1,9 @@
 import type { MeiliSearch } from "meilisearch";
 
-export async function createDocuments(
+async function createDocuments(
   client: MeiliSearch,
   indexUid: string,
-  documents: Record<string, unknown>[],
+  documents: Record<string, unknown>[]
 ): Promise<() => Promise<void>> {
   const { taskUid } = await client.index(indexUid).addDocuments(documents);
   const { status, error } = await client.waitForTask(taskUid);
@@ -19,5 +19,19 @@ export async function createDocuments(
     if (status !== "succeeded") {
       throw error;
     }
+  };
+}
+
+export type BaseDocument = {
+  id: number;
+};
+
+export async function createDocumentsAndRelease(
+  client: MeiliSearch,
+  indexUid: string,
+  documents: BaseDocument[]
+) {
+  return {
+    [Symbol.asyncDispose]: await createDocuments(client, indexUid, documents),
   };
 }
