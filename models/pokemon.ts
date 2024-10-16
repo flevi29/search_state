@@ -1,4 +1,4 @@
-import type { BaseDocument } from "../scripts/create_documents.ts";
+import type { BaseDocument } from "./index.ts";
 
 type Pokemon = BaseDocument & {
   name: string;

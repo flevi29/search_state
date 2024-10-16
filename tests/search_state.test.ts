@@ -1,8 +1,8 @@
 import { assertEquals, assertExists } from "@std/assert";
 import { spy } from "@std/testing/mock";
 import { SearchState } from "../src/mod.ts";
-import { getSearchState, pingAndGetMeiliSearch } from "./util.ts";
-import { createDocumentsAndRelease } from "../scripts/create_documents.ts";
+import { getSearchState, pingAndGetMeiliSearch } from "../utils/meili_getters.ts";
+import { createDocumentsAndRelease } from "../utils/create_documents.ts";
 import { MOVIES } from "../models/index.ts";
 
 Deno.test(`Test ${SearchState.name}`, async (t) => {

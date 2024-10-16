@@ -1,4 +1,5 @@
 import type { MeiliSearch } from "meilisearch";
+import type { BaseDocument } from "../models/index.ts";
 
 async function createDocuments(
   client: MeiliSearch,
@@ -21,10 +22,6 @@ async function createDocuments(
     }
   };
 }
-
-export type BaseDocument = {
-  id: number;
-};
 
 export async function createDocumentsAndRelease(
   client: MeiliSearch,
