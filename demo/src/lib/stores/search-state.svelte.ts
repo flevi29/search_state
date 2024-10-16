@@ -32,11 +32,9 @@ const searchState = (() => {
   ]);
 
   let rawSearchState = $state<SearchState | null>(null),
-    indexes = $state<Record<string, IndexStats> | null>(null),
+    indexes = $state<Map<string, IndexStats> | null>(null),
     // TODO: when this changes many setting should reset
-    selectedIndex = $state<string | null>(
-      localStorage.getItem(LS_INDEX_KEY) || null,
-    );
+    selectedIndex = $state<string | null>(null);
 
   const searchState = derived<
       typeof hostAndApiKey,
@@ -67,27 +65,36 @@ const searchState = (() => {
                   meilisearch
                     .index(uid)
                     .getStats()
-                    .then((stats) => ({ uid, stats })),
+                    .then((indexStats) => [uid, indexStats] as const),
                 ),
               ),
             )
-            .then((indexesWithStats) => {
+            .then((indexStatsArr) => {
               // TODO: errorCallback second argument
               const st = new SearchState(meilisearch);
               st.start();
               set({ status: STATUS.OK, value: st });
               rawSearchState = st;
-              // TODO: What if there are not indexes? What will the value be?
-              indexes = indexesWithStats.reduce(
-                (previousValue, { uid, stats }) => {
-                  previousValue[uid] = stats;
-                  return previousValue;
-                },
-                {} as Record<string, IndexStats>,
-              );
+
+              indexes =
+                indexStatsArr.length === 0 ? null : new Map(indexStatsArr);
 
               if (selectedIndex === null) {
-                selectedIndex = indexesWithStats[0]?.uid ?? null;
+                if (indexes === null || indexes.size === 0) {
+                  selectedIndex = null;
+                } else {
+                  const localStorageSelectedIndex =
+                    localStorage.getItem(LS_INDEX_KEY);
+                  if (
+                    localStorageSelectedIndex !== null &&
+                    indexes.has(localStorageSelectedIndex)
+                  ) {
+                    selectedIndex = localStorageSelectedIndex;
+                  } else {
+                    const [firstIndex] = indexes.entries().next().value!;
+                    selectedIndex = firstIndex;
+                  }
+                }
               }
 
               return st.stop;
@@ -147,7 +154,7 @@ const searchState = (() => {
       return selectedIndex;
     },
     setSelectedIndex(v: string): void {
-      if (indexes === null || !(v in indexes)) {
+      if (indexes === null || !indexes.has(v)) {
         throw new Error(
           `either indexes are not set or provided key "${v}" cannot be found in indexes`,
         );

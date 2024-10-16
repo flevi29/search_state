@@ -1,6 +1,5 @@
 import { SortBy, type SortRecord, type SearchState } from "$rootSrc/mod";
 
-
 const sortOptions = {
   default: undefined,
   byScore: ["score:asc"],
@@ -29,9 +28,7 @@ function getSortByWidget(indexUid: string, searchState: SearchState) {
     ...new SortBy(searchState, indexUid, {
       sortOptions,
       defaultSortOptionKey: "default",
-      selectedListener(v) {
-        selectedSortKey = v;
-      },
+      selectedListener: (v) => void (selectedSortKey = v),
     }),
   };
 }

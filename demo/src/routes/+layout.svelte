@@ -1,17 +1,23 @@
 <script lang="ts">
   import "../app.css";
 
+  import { onDestroy } from "svelte";
   import { searchState } from "$lib/stores/search-state.svelte";
+  import { getRouterState } from "$lib/stores/router-state";
   import { STATUS } from "$lib/stores/search-state.svelte";
   import ApiSettings from "./api-settings.svelte";
   import IndexSelector from "./index-selector.svelte";
   import SearchBox from "./search-box.svelte";
-  // TODO: Fix this widget
+  // TODO: Fix/Adapt this widget to indexes woth unknown sortable properties
   // import SortBy from "./sort-by.svelte";
 
   const { children } = $props();
   const { value: searchStateValue, isHostAndApiKeySet } = searchState;
+  const routerState = getRouterState();
+
   // TODO: Add UI logic for when there are no indexes
+
+  onDestroy(routerState.unsubscribe);
 </script>
 
 <div>
@@ -25,23 +31,31 @@
         {@const { status, value } = $searchStateValue}
 
         {#if status === STATUS.OK}
-          <IndexSelector />
+          <!-- TODO: when exactly is indexes null? -->
+          {#if searchState.indexes !== null && searchState.indexes.size !== 0}
+            <IndexSelector />
 
-          <SearchBox
-            indexUid={searchState.selectedIndex!}
-            searchState={value}
-          />
+            <SearchBox
+              indexUid={searchState.selectedIndex!}
+              searchState={value}
+              routerState={routerState.value}
+            />
 
-          <!-- <SortBy indexUid={searchState.selectedIndex!} searchState={value} /> -->
+            <!-- <SortBy indexUid={searchState.selectedIndex!} searchState={value} /> -->
 
-          <div>
-            <a href="./">estimated</a>
-            <a href="./numbered-pagination">numbered</a>
-          </div>
+            <div>
+              <a href="./">estimated</a>
+              <a href="./numbered-pagination">numbered</a>
+            </div>
 
-          <div>
-            {@render children()}
-          </div>
+            <div>
+              {@render children()}
+            </div>
+          {:else}
+            <div>
+              <span style:color="gray">There are no indexes to search.</span>
+            </div>
+          {/if}
         {:else}
           <div style:padding="0.5rem">
             <div

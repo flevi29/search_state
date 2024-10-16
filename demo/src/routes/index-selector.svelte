@@ -6,14 +6,12 @@
 <select
   id="index"
   value={searchState.selectedIndex}
-  disabled={searchState.indexes !== null &&
-    Object.keys(searchState.indexes).length === 1}
   oninput={function () {
     searchState.setSelectedIndex(this.value);
   }}
 >
   {#if searchState.indexes !== null}
-    {#each Object.entries(searchState.indexes) as [uid, { numberOfDocuments }]}
+    {#each searchState.indexes as [uid, { numberOfDocuments }]}
       <option selected={searchState.selectedIndex === uid} value={uid}
         >{uid} ({numberOfDocuments})</option
       >

@@ -37,24 +37,12 @@ export function getHitsWithPaginationWidget<T extends Record<string, any>>(
     },
     ...new HitsWithPagination<T>(searchState, indexUid, {
       initialLimit,
-      hitsListener(v) {
-        hits = v;
-      },
-      estimatedTotalHitsListener(v) {
-        estimatedTotalHits = v;
-      },
-      limitListener(v) {
-        limit = v;
-      },
-      pageListener(v) {
-        page = v;
-      },
-      hasPreviousListener(v) {
-        hasPrevious = v;
-      },
-      hasNextListener(v) {
-        hasNext = v;
-      },
+      hitsListener: (v) => void (hits = v),
+      estimatedTotalHitsListener: (v) => void (estimatedTotalHits = v),
+      limitListener: (v) => void (limit = v),
+      pageListener: (v) => void (page = v),
+      hasPreviousListener: (v) => void (hasPrevious = v),
+      hasNextListener: (v) => void (hasNext = v),
     }),
   };
 }

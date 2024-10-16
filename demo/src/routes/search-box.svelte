@@ -1,14 +1,16 @@
 <script lang="ts">
-  import type { SearchState } from "$rootSrc/mod";
+  import type { RouterState, SearchState } from "$rootSrc/mod";
   import { getSearchBoxWidget } from "$lib/stores/search-box.svelte";
   import DebouncedTextInput from "$lib/components/debounced-text-input.svelte";
 
   const {
     indexUid,
     searchState,
-  }: { indexUid: string; searchState: SearchState } = $props();
+    routerState,
+  }: { indexUid: string; searchState: SearchState; routerState?: RouterState } =
+    $props();
 
-  const w = $derived(getSearchBoxWidget(indexUid, searchState));
+  const w = $derived(getSearchBoxWidget(indexUid, searchState, routerState));
   const value = $derived(w.q ?? "");
 
   $effect(() => w.unmount);

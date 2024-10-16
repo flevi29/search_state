@@ -1,6 +1,8 @@
 import type { MultiSearchQuery } from "meilisearch";
-import type { SearchState } from "./search_state.ts";
-import { getState } from "./util.ts";
+import type { SearchState } from "../search_state.ts";
+import type { RouterState } from "../router_state.ts";
+import type { SearchBoxRouter } from "./search_box_router.ts";
+import { getState } from "../util.ts";
 
 // export type SearchBoxConnectorParams = {
 //   /**
@@ -53,44 +55,51 @@ type AttributesToSearchOn = NonNullable<
 export class SearchBox {
   #state?: SearchState;
   readonly #indexUid: string;
+  readonly #router?: SearchBoxRouter;
 
   #q?: Q;
-
-  constructor(state: SearchState, indexUid: string) {
-    // TODO: This should be more of a Router thing
-    // this.#removeListener = state.addQueryMapListener((initiator, queryMap) => {
-    //   if (Object.is(initiator, this)) {
-    //     return;
-    //   }
-
-    //   const indexQuery = queryMap.get(indexUid);
-    //   if (indexQuery !== undefined) {
-    //     const q = indexQuery.q ?? "";
-
-    //     if (q !== this.#q) {
-    //       this.#q = q;
-    //       qListener(q);
-    //     }
-    //   }
-    // });
-
-    this.#state = state;
-    this.#indexUid = indexUid;
-  }
-
   readonly setQ = (q: Q): void => {
     const state = getState(this.#state);
 
     if (q !== this.#q) {
       this.#q = q;
 
+      this.#router?.setQ(q);
+
       state.changeQueryAndResetPagination(
         this,
         this.#indexUid,
-        (indexQuery) => void (indexQuery.q = q),
+        (indexQuery) => void (indexQuery.q = q)
       );
     }
   };
+
+  constructor(
+    state: SearchState,
+    indexUid: string,
+    router?: {
+      SearchBoxRouter: typeof SearchBoxRouter;
+      routerState: RouterState;
+      listener: (q: Q) => void;
+    }
+  ) {
+    this.#state = state;
+    this.#indexUid = indexUid;
+
+    if (router !== undefined) {
+      const { SearchBoxRouter, routerState, listener } = router;
+      this.#router = new SearchBoxRouter(indexUid, routerState, (q) => {
+        this.#q = q;
+        listener(q);
+
+        state.changeQuery(
+          this,
+          indexUid,
+          (indexQuery) => void (indexQuery.q = q)
+        );
+      });
+    }
+  }
 
   readonly unmount = (): void => {
     const state = getState(this.#state);
@@ -98,8 +107,9 @@ export class SearchBox {
     state.changeQueryAndResetPagination(
       this,
       this.#indexUid,
-      (indexQuery) => void delete indexQuery.q,
+      (indexQuery) => void delete indexQuery.q
     );
+    this.#router?.setQ(undefined);
 
     this.#state = undefined;
   };

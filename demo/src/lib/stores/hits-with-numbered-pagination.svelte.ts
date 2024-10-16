@@ -32,21 +32,11 @@ export function getHitsWithNumberedPaginationWidget<T>(
     },
     ...new HitsWithNumberedPagination(searchState, indexUid, {
       initialHitsPerPage,
-      hitsPerPageListener(v) {
-        hitsPerPage = v;
-      },
-      hitsListener(v) {
-        hits = v;
-      },
-      totalHitsListener(v) {
-        totalHits = v;
-      },
-      totalPagesListener(v) {
-        totalPages = v;
-      },
-      pageListener(v) {
-        page = v;
-      },
+      hitsPerPageListener: (v) => void (hitsPerPage = v),
+      hitsListener: (v) => void (hits = v),
+      totalHitsListener: (v) => void (totalHits = v),
+      totalPagesListener: (v) => void (totalPages = v),
+      pageListener: (v) => void (page = v),
     }),
   };
 }
