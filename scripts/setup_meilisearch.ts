@@ -1,5 +1,5 @@
 import { pingAndGetMeiliSearch } from "../utils/meili_getters.ts";
-import { MOVIES, type BaseDocument } from "../models/index.ts";
+import { type BaseDocument, MOVIES } from "../models/index.ts";
 
 const INDEX = "i";
 
@@ -13,5 +13,5 @@ await meilisearch.waitForTask((await index.addDocuments(MOVIES)).taskUid);
 await meilisearch.waitForTask(
   (
     await index.updateSettings({ sortableAttributes: ["score", "title"] })
-  ).taskUid
+  ).taskUid,
 );

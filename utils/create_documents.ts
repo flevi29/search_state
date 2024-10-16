@@ -4,7 +4,7 @@ import type { BaseDocument } from "../models/index.ts";
 async function createDocuments(
   client: MeiliSearch,
   indexUid: string,
-  documents: Record<string, unknown>[]
+  documents: Record<string, unknown>[],
 ): Promise<() => Promise<void>> {
   const { taskUid } = await client.index(indexUid).addDocuments(documents);
   const { status, error } = await client.waitForTask(taskUid);
@@ -26,7 +26,7 @@ async function createDocuments(
 export async function createDocumentsAndRelease(
   client: MeiliSearch,
   indexUid: string,
-  documents: BaseDocument[]
+  documents: BaseDocument[],
 ) {
   return {
     [Symbol.asyncDispose]: await createDocuments(client, indexUid, documents),
