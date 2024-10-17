@@ -21,7 +21,7 @@ export class SearchBox {
       state.changeQueryAndResetPagination(
         this,
         this.#indexUid,
-        (indexQuery) => void (indexQuery.q = q)
+        (indexQuery) => void (indexQuery.q = q),
       );
     }
   };
@@ -33,7 +33,7 @@ export class SearchBox {
       SearchBoxRouter: typeof SearchBoxRouter;
       routerState: RouterState;
       qListener: (q: Q) => void;
-    }
+    },
   ) {
     this.#state = state;
     this.#indexUid = indexUid;
@@ -49,7 +49,7 @@ export class SearchBox {
             this.#q = q;
             qListener(q);
           },
-        }
+        },
       );
     }
   }
@@ -60,7 +60,7 @@ export class SearchBox {
     state.changeQueryAndResetPagination(
       this,
       this.#indexUid,
-      (indexQuery) => void delete indexQuery.q
+      (indexQuery) => void delete indexQuery.q,
     );
 
     if (this.#router !== undefined) {

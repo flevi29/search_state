@@ -10,7 +10,7 @@ import type {
 export class SearchBoxRouter {
   readonly #removeListener: () => void;
   readonly #modifySearchParams: (
-    callback: (searchParams: SearchParams) => void
+    callback: (searchParams: SearchParams) => void,
   ) => void;
 
   constructor(
@@ -21,14 +21,14 @@ export class SearchBoxRouter {
     }: {
       changeQuery: WithParamsExceptFirstTwo<SearchState["changeQuery"]>;
       stateQListener: (q: Q) => void;
-    }
+    },
   ) {
     const { removeListener, modifySearchParams } = addRouterStateListener(
       (searchParams) => {
         const q = searchParams?.q ?? "";
         changeQuery((query) => void (query.q = q));
         stateQListener(q);
-      }
+      },
     );
     this.#removeListener = removeListener;
     this.#modifySearchParams = modifySearchParams;
@@ -37,7 +37,7 @@ export class SearchBoxRouter {
   readonly setQ = (q?: string): void => {
     this.#modifySearchParams(
       (searchParams) =>
-        void (q === undefined ? delete searchParams.q : (searchParams.q = q))
+        void (q === undefined ? delete searchParams.q : (searchParams.q = q)),
     );
   };
 

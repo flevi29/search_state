@@ -11,7 +11,7 @@ import { PAGE_ONE } from "./model.ts";
 export class HitsWithNumberedPaginationRouter {
   readonly #removeListener: () => void;
   readonly #modifySearchParams: (
-    callback: (searchParams: SearchParams) => void
+    callback: (searchParams: SearchParams) => void,
   ) => void;
 
   constructor(
@@ -25,7 +25,7 @@ export class HitsWithNumberedPaginationRouter {
       changeQuery: WithParamsExceptFirstTwo<SearchState["changeQuery"]>;
       stateHitsPerPageListener: (hitsPerPage: HitsPerPage) => void;
       statePageListener: (page: Page) => void;
-    }
+    },
   ) {
     const { removeListener, modifySearchParams } = addRouterStateListener(
       (searchParams) => {
@@ -39,7 +39,7 @@ export class HitsWithNumberedPaginationRouter {
           query.hitsPerPage = hitsPerPage;
           query.page = page;
         });
-      }
+      },
     );
     this.#removeListener = removeListener;
     this.#modifySearchParams = modifySearchParams;
@@ -50,7 +50,7 @@ export class HitsWithNumberedPaginationRouter {
       (searchParams) =>
         void (hitsPerPage === undefined
           ? delete searchParams.hitsPerPage
-          : (searchParams.hitsPerPage = hitsPerPage))
+          : (searchParams.hitsPerPage = hitsPerPage)),
     );
   };
 
@@ -59,7 +59,7 @@ export class HitsWithNumberedPaginationRouter {
       (searchParams) =>
         void (page === undefined
           ? delete searchParams.page
-          : (searchParams.page = page))
+          : (searchParams.page = page)),
     );
   };
 

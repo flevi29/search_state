@@ -14,7 +14,7 @@ import type { HitsWithNumberedPaginationRouter } from "./hits_with_numbered_pagi
 
 export class HitsWithNumberedPagination<
   // deno-lint-ignore no-explicit-any
-  T extends Record<string, any> = Record<string, any>
+  T extends Record<string, any> = Record<string, any>,
 > {
   #state?: SearchState;
   readonly #indexUid: string;
@@ -22,7 +22,9 @@ export class HitsWithNumberedPagination<
   readonly #removeResetPaginationListener: () => void;
   readonly #removeResponseListener: () => void;
 
-  readonly #hitsPerPageListener: HitsWithNumberedPaginationOptions<T>["hitsPerPageListener"];
+  readonly #hitsPerPageListener: HitsWithNumberedPaginationOptions<
+    T
+  >["hitsPerPageListener"];
   readonly #pageListener: HitsWithNumberedPaginationOptions<T>["pageListener"];
 
   readonly #initialHitsPerPage: HitsPerPage;
@@ -45,7 +47,7 @@ export class HitsWithNumberedPagination<
     router?: {
       HitsWithNumberedPaginationRouter: typeof HitsWithNumberedPaginationRouter;
       routerState: RouterState;
-    }
+    },
   ) {
     this.#removeResetPaginationListener = state.addResetPaginationListener(
       indexUid,
@@ -56,7 +58,7 @@ export class HitsWithNumberedPagination<
 
           this.#router?.setPage(undefined);
         }
-      }
+      },
     );
 
     this.#removeResponseListener = state.addResponseListener(
@@ -70,13 +72,13 @@ export class HitsWithNumberedPagination<
           state.errorCallback(
             this,
             new Error(
-              "one or more of `totalHits`, `totalPages`, `page` is undefined"
-            )
+              "one or more of `totalHits`, `totalPages`, `page` is undefined",
+            ),
           );
           return;
         }
 
-        hitsListener(<Hits<T>>hits);
+        hitsListener(<Hits<T>> hits);
 
         if (totalHits !== this.#totalHits) {
           this.#totalHits = totalHits;
@@ -94,7 +96,7 @@ export class HitsWithNumberedPagination<
 
           this.#router?.setPage(page);
         }
-      }
+      },
     );
 
     this.#state = state;
@@ -130,7 +132,7 @@ export class HitsWithNumberedPagination<
             this.#page = page;
             pageListener(page);
           },
-        }
+        },
       );
     }
   }
@@ -143,7 +145,7 @@ export class HitsWithNumberedPagination<
       this.#hitsPerPageListener(hitsPerPage);
 
       this.#router?.setHitsPerPage(
-        hitsPerPage === this.#initialHitsPerPage ? undefined : hitsPerPage
+        hitsPerPage === this.#initialHitsPerPage ? undefined : hitsPerPage,
       );
 
       state.changeQuery(this, this.#indexUid, (indexQuery) => {
@@ -165,7 +167,7 @@ export class HitsWithNumberedPagination<
       state.changeQuery(
         this,
         this.#indexUid,
-        (indexQuery) => void (indexQuery.page = page)
+        (indexQuery) => void (indexQuery.page = page),
       );
     }
   };
