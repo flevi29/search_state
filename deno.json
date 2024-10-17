@@ -4,7 +4,6 @@
     "test": "deno test -E -N",
     "fmt": "deno fmt --ignore=\"coverage,demo\"",
     "lint": "deno lint src tests",
-    "run-docker": "docker run -p 7700:7700 --rm getmeili/meilisearch:latest meilisearch --master-key=masterKey --no-analytics",
     "doc-lint": "",
     "setup:meili": "deno --allow-net --allow-env scripts/setup_meilisearch.ts"
   },
