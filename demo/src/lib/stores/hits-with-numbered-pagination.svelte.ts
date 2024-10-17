@@ -1,9 +1,15 @@
-import { HitsWithNumberedPagination, type SearchState } from "$rootSrc/mod";
+import {
+  HitsWithNumberedPagination,
+  HitsWithNumberedPaginationRouter,
+  type RouterState,
+  type SearchState,
+} from "$rootSrc/mod";
 import type { Hits } from "meilisearch";
 
 export function getHitsWithNumberedPaginationWidget<T>(
   indexUid: string,
   searchState: SearchState,
+  routerState?: RouterState,
 ) {
   let hitsPerPage = $state<number | null>(null),
     hits = $state<Hits<Record<string, T>> | null>(null),
@@ -30,13 +36,23 @@ export function getHitsWithNumberedPaginationWidget<T>(
     get page() {
       return page;
     },
-    ...new HitsWithNumberedPagination(searchState, indexUid, {
-      initialHitsPerPage,
-      hitsPerPageListener: (v) => void (hitsPerPage = v),
-      hitsListener: (v) => void (hits = v),
-      totalHitsListener: (v) => void (totalHits = v),
-      totalPagesListener: (v) => void (totalPages = v),
-      pageListener: (v) => void (page = v),
-    }),
+    ...new HitsWithNumberedPagination(
+      searchState,
+      indexUid,
+      {
+        initialHitsPerPage,
+        hitsPerPageListener: (v) => void (hitsPerPage = v),
+        hitsListener: (v) => void (hits = v),
+        totalHitsListener: (v) => void (totalHits = v),
+        totalPagesListener: (v) => void (totalPages = v),
+        pageListener: (v) => void (page = v),
+      },
+      routerState !== undefined
+        ? {
+            HitsWithNumberedPaginationRouter: HitsWithNumberedPaginationRouter,
+            routerState,
+          }
+        : undefined,
+    ),
   };
 }

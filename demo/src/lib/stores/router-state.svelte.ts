@@ -2,7 +2,7 @@ import { goto } from "$app/navigation";
 import { page } from "$app/stores";
 import { RouterState } from "$rootSrc/mod";
 
-export function getRouterState() {
+function getRouterState() {
   let identifier = 0,
     to: ReturnType<typeof setTimeout> | null = null,
     promiseChain = Promise.resolve();
@@ -53,3 +53,20 @@ export function getRouterState() {
 
   return { value: routerState, unsubscribe };
 }
+
+export const routerState = (() => {
+  let routerState = $state<ReturnType<typeof getRouterState> | null>(null);
+
+  return {
+    set: () => void (routerState = getRouterState()),
+    unset(): void {
+      if (routerState !== null) {
+        routerState.unsubscribe();
+        routerState = null;
+      }
+    },
+    get value() {
+      return routerState?.value;
+    },
+  };
+})();

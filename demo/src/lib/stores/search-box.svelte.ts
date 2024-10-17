@@ -23,7 +23,7 @@ export function getSearchBoxWidget(
         ? {
             SearchBoxRouter,
             routerState,
-            listener: (v) => void (q = v),
+            qListener: (v) => void (q = v),
           }
         : undefined,
     ),

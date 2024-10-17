@@ -3,7 +3,7 @@
 
   import { onDestroy } from "svelte";
   import { searchState } from "$lib/stores/search-state.svelte";
-  import { getRouterState } from "$lib/stores/router-state";
+  import { routerState } from "$lib/stores/router-state.svelte";
   import { STATUS } from "$lib/stores/search-state.svelte";
   import ApiSettings from "./api-settings.svelte";
   import IndexSelector from "./index-selector.svelte";
@@ -13,11 +13,11 @@
 
   const { children } = $props();
   const { value: searchStateValue, isHostAndApiKeySet } = searchState;
-  const routerState = getRouterState();
+  routerState.set();
 
   // TODO: Add UI logic for when there are no indexes
 
-  onDestroy(routerState.unsubscribe);
+  onDestroy(routerState.unset);
 </script>
 
 <div>
