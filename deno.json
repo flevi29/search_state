@@ -3,7 +3,8 @@
   "tasks": {
     "test": "deno test -E -N",
     "fmt": "deno fmt --ignore=\"coverage,demo\"",
-    "lint": "deno lint src tests"
+    "lint": "deno lint src tests",
+    "setup:meili": "deno --allow-net --allow-env scripts/setup_meilisearch.ts"
   },
   "imports": {
     "@deno/dnt": "jsr:@deno/dnt@^0.41.3",

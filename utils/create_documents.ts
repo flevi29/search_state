@@ -1,6 +1,7 @@
 import type { MeiliSearch } from "meilisearch";
+import type { BaseDocument } from "../models/index.ts";
 
-export async function createDocuments(
+async function createDocuments(
   client: MeiliSearch,
   indexUid: string,
   documents: Record<string, unknown>[],
@@ -19,5 +20,15 @@ export async function createDocuments(
     if (status !== "succeeded") {
       throw error;
     }
+  };
+}
+
+export async function createDocumentsAndRelease(
+  client: MeiliSearch,
+  indexUid: string,
+  documents: BaseDocument[],
+) {
+  return {
+    [Symbol.asyncDispose]: await createDocuments(client, indexUid, documents),
   };
 }
