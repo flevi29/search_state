@@ -2,6 +2,9 @@
   "version": "0.1.0",
   "tasks": {
     "test": "deno test -E -N",
+    "test:coverage": "deno task test --coverage=cov_profile", 
+    "coverage:print": "deno coverage cov_profile",
+    "coverage:html": "deno coverage cov_profile --html",
     "fmt": "deno fmt --ignore=\"coverage,demo\"",
     "lint": "deno lint src tests",
     "setup:meili": "deno --allow-net --allow-env scripts/setup_meilisearch.ts"
