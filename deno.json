@@ -3,8 +3,10 @@
   "tasks": {
     "test": "deno test -E -N",
     "test:coverage": "deno task test --coverage=cov_profile", 
-    "coverage:print": "deno coverage cov_profile",
+    "coverage:print": "deno coverage --exclude='utils' cov_profile",
     "coverage:html": "deno coverage cov_profile --html",
+    "coverage:ui": "deno --allow-net --allow-read scripts/serve_coverage.ts cov_profile/html",
+"coverage": "deno task test:coverage && deno task coverage:print && deno task coverage:html && echo 'To see coverage report in UI, run: deno task coverage:ui and open http://0.0.0.0:8000'",
     "fmt": "deno fmt --ignore=\"coverage,demo\"",
     "lint": "deno lint src tests",
     "setup:meili": "deno --allow-net --allow-env scripts/setup_meilisearch.ts"
