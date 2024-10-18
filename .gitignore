@@ -13,6 +13,7 @@ dist-ssr
 *.local
 
 coverage
+cov_profile
 
 .env
 
