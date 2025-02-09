@@ -37,5 +37,8 @@ jobs:
       - name: Run linter
         run: deno task -r lint
 
+      - name: Type check app
+        run: deno task -f app check
+
       - name: Run tests
         run: deno task -r test
