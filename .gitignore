@@ -12,9 +12,6 @@ dist
 dist-ssr
 *.local
 
-coverage
-cov_profile
-
 .env
 
 # Editor directories and files

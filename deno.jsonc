@@ -1,0 +1,7 @@
+{
+  "imports": {
+    "meilisearch": "npm:meilisearch@^0.48.2"
+  },
+  "nodeModulesDir": "auto",
+  "workspace": ["lib", "app"]
+}

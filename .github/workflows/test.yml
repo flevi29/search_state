@@ -24,19 +24,18 @@ jobs:
 
     name: Deno tests
     steps:
-      - name: Setup repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Deno
-        uses: denoland/setup-deno@v2.0.0
+        uses: denoland/setup-deno@v2
         with:
-          deno-version: v2.x
+          deno-version: vx.x.x
 
       - name: Check formatting
-        run: deno task fmt --check
+        run: deno task -r fmt
 
       - name: Run linter
-        run: deno task lint
+        run: deno task -r lint
 
       - name: Run tests
-        run: deno task test
+        run: deno task -r test
