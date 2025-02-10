@@ -1,9 +1,9 @@
 import { MeiliSearch } from "meilisearch";
 import { SearchState } from "../src/mod.ts";
 
-const host = Deno.env.get("HOST") ?? "http://127.0.0.1",
-  port = Deno.env.get("PORT") ?? "7700",
-  apiKey = Deno.env.get("API_KEY") ?? "masterKey";
+const host = Deno.env.get("HOST") ?? "http://127.0.0.1";
+const port = Deno.env.get("PORT") ?? "7700";
+const apiKey = Deno.env.get("API_KEY") ?? "masterKey";
 
 export async function pingAndGetMeiliSearch(): Promise<MeiliSearch> {
   const client = new MeiliSearch({ host: `${host}:${port}`, apiKey });
@@ -14,7 +14,7 @@ export async function pingAndGetMeiliSearch(): Promise<MeiliSearch> {
   }
 
   throw new Error(
-    `Meilisearch at ${host} could be reached, but it's unavailable`,
+    `Meilisearch at ${host}:${port} could be reached, but it's unavailable`,
   );
 }
 

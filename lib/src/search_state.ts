@@ -21,7 +21,7 @@ export class SearchState {
 
   readonly #meilisearch: MeiliSearch;
   readonly #errorCallback: ErrorCallback;
-  get errorCallback() {
+  get errorCallback(): ErrorCallback {
     return this.#errorCallback;
   }
 
@@ -44,7 +44,7 @@ export class SearchState {
   #to: ReturnType<typeof setTimeout> | null = null;
   #ac: AbortController = new AbortController();
   readonly #abortObject = {};
-  #scheduledPromises = 0;
+  #numOfPromises = 0;
   readonly #search = (initiator: unknown): void => {
     if (!this.#isStarted) {
       return;
@@ -60,9 +60,9 @@ export class SearchState {
           return;
         }
 
-        this.#scheduledPromises += 1;
+        this.#numOfPromises += 1;
 
-        if (this.#scheduledPromises > 1) {
+        if (this.#numOfPromises > 1) {
           this.#ac.abort(this.#abortObject);
           this.#ac = new AbortController();
         }
@@ -72,18 +72,13 @@ export class SearchState {
           { signal: this.#ac.signal },
         );
 
-        const resultsMap = new Map<string, MultiSearchResult<unknown>>();
-        for (const result of results) {
-          resultsMap.set(result.indexUid, result);
-        }
-
         for (const [indexUid, responseListeners] of this.#responseListeners) {
-          const result = resultsMap.get(indexUid);
+          const result = results.find((v) => v.indexUid === indexUid);
           if (result === undefined) {
             this.#errorCallback(
               this,
               new Error(
-                `listeners for indexUid "${indexUid}" did not recieve a result from search request`,
+                `listeners for indexUid "${indexUid}" did not receive a result from search request`,
               ),
             );
             continue;
@@ -96,14 +91,15 @@ export class SearchState {
       })()
         .catch((error) => {
           if (
-            !(error instanceof Error) ||
+            error === null ||
+            typeof error !== "object" ||
             !Object.is(error.cause, this.#abortObject)
           ) {
             this.#errorCallback(initiator, error);
           }
         })
         .finally(() => {
-          this.#scheduledPromises -= 1;
+          this.#numOfPromises -= 1;
         })
     );
   };
@@ -126,9 +122,7 @@ export class SearchState {
 
   #filterCache = new Map<string, string>();
   // TODO: Rename this
-  #handleFilters(indexQuery: MultiSearchQuery) {
-    const { indexUid, filter } = indexQuery;
-
+  #handleFilters({ indexUid, filter }: MultiSearchQuery) {
     if (Array.isArray(filter)) {
       this.#errorCallback(this, new Error("array filters are unsupported"));
       return;

@@ -8,7 +8,7 @@
   import ApiSettings from "./api-settings.svelte";
   import IndexSelector from "./index-selector.svelte";
   import SearchBox from "./search-box.svelte";
-  // TODO: Fix/Adapt this widget to indexes woth unknown sortable properties
+  // TODO: Fix/Adapt this widget to indexes with unknown sortable properties
   // import SortBy from "./sort-by.svelte";
 
   const { children } = $props();

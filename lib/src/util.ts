@@ -3,15 +3,15 @@ import type { SearchState } from "./search_state.ts";
 // deno-lint-ignore no-explicit-any
 export type WithParamsExceptFirst<TFn extends (...args: any[]) => any> =
   // deno-lint-ignore no-explicit-any
-  TFn extends (...args: [any, ...infer TArgsExceptFrist]) => infer TReturn
-    ? (...args: TArgsExceptFrist) => TReturn
+  TFn extends (...args: [any, ...infer TArgsExceptFirst]) => infer TReturn
+    ? (...args: TArgsExceptFirst) => TReturn
     : never;
 
 // deno-lint-ignore no-explicit-any
 export type WithParamsExceptFirstTwo<TFn extends (...args: any[]) => any> =
   // deno-lint-ignore no-explicit-any
-  TFn extends (...args: [any, any, ...infer TArgsExceptFrist]) => infer TReturn
-    ? (...args: TArgsExceptFrist) => TReturn
+  TFn extends (...args: [any, any, ...infer TArgsExceptFirst]) => infer TReturn
+    ? (...args: TArgsExceptFirst) => TReturn
     : never;
 
 export function getState(state?: SearchState): SearchState {
@@ -23,12 +23,12 @@ export function getState(state?: SearchState): SearchState {
 }
 
 // deno-lint-ignore no-explicit-any
-type GenericFunction = (...args: any[]) => void;
+type GenericVoidFunction = (...args: any[]) => void;
 
 export function addListener(
-  mapOfIndexListeners: Map<string, Set<GenericFunction>>,
+  mapOfIndexListeners: Map<string, Set<GenericVoidFunction>>,
   indexUid: string,
-  listener: GenericFunction,
+  listener: GenericVoidFunction,
 ): () => void {
   let indexListeners = mapOfIndexListeners.get(indexUid);
   if (indexListeners === undefined) {

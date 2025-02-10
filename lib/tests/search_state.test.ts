@@ -17,10 +17,7 @@ Deno.test(`Test ${SearchState.name}`, async (t) => {
   await t.step(
     "should only call `fetch` once, after synchronous tasks finished running",
     async () => {
-      using fetchSpy = spy(
-        globalThis,
-        "fetch",
-      );
+      using fetchSpy = spy(globalThis, "fetch");
 
       const arrOfQ = ["once", "twice", "thrice", "four times"];
       for (const q of arrOfQ) {
@@ -32,7 +29,7 @@ Deno.test(`Test ${SearchState.name}`, async (t) => {
       }
 
       // TODO: This might not be the best way to advance the task queue
-      await new Promise((resovle) => setTimeout(resovle));
+      await new Promise((resolve) => setTimeout(resolve));
 
       assertEquals(fetchSpy.calls.length, 1);
 
@@ -49,10 +46,7 @@ Deno.test(`Test ${SearchState.name}`, async (t) => {
   await t.step(
     "should abort previous unfinished running `fetch` calls",
     async () => {
-      using fetchSpy = spy(
-        globalThis,
-        "fetch",
-      );
+      using fetchSpy = spy(globalThis, "fetch");
 
       searchState.value.changeQuery(
         null,
@@ -60,14 +54,14 @@ Deno.test(`Test ${SearchState.name}`, async (t) => {
         (query) => void (query.q = "TEST"),
       );
       // TODO: This might not be the best way to advance the task queue
-      await new Promise((resovle) => setTimeout(resovle));
+      await new Promise((resolve) => setTimeout(resolve));
       searchState.value.changeQuery(
         null,
         INDEX,
         (query) => void (query.q = "TEST TEST"),
       );
       // TODO: This might not be the best way to advance the task queue
-      await new Promise((resovle) => setTimeout(resovle));
+      await new Promise((resolve) => setTimeout(resolve));
 
       assertEquals(fetchSpy.calls.length, 2);
       const [first, second] = await Promise.allSettled(

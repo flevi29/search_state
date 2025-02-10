@@ -1,9 +1,14 @@
 import type { SearchParams } from "meilisearch";
 
-type AllowedRecord = Record<string, SearchParams>;
-type MapIteratorOfAllowedRecord = MapIterator<
+export type AllowedRecord = Record<string, SearchParams>;
+export type MapIteratorOfAllowedRecord = MapIterator<
   [keyof AllowedRecord, AllowedRecord[keyof AllowedRecord]]
 >;
+
+export type RenameThisType = {
+  removeListener: () => void;
+  modifySearchParams: (callback: (searchParams: SearchParams) => void) => void;
+};
 
 export class RouterState {
   readonly #searchParamsMap = new Map<string, SearchParams>();
@@ -15,7 +20,10 @@ export class RouterState {
 
   #to: ReturnType<typeof setTimeout> | null = null;
   readonly #listeners = new Map<string, Set<(val?: SearchParams) => void>>();
-  addListener(indexUid: string, listener: (val?: SearchParams) => void) {
+  addListener(
+    indexUid: string,
+    listener: (val?: SearchParams) => void,
+  ): RenameThisType {
     const currentSearchParams = this.#searchParamsMap.get(indexUid);
     if (currentSearchParams !== undefined) {
       listener(currentSearchParams);

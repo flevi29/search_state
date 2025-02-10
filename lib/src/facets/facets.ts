@@ -1,6 +1,7 @@
 import type { SearchState } from "../search_state.ts";
 import { getState } from "../util.ts";
 
+// TODO: Unfinished
 // deno-lint-ignore no-explicit-any
 export class Facets<TRecord extends Record<string, any>> {
   #state?: SearchState;
