@@ -1,11 +1,11 @@
-import { FilterType, type FilterExpression } from "../model.ts";
+import { type FilterExpression, FilterType } from "../model.ts";
 
 function escapeString(text: string): string {
   return "'" + text.replace(",", "\\,");
 }
 
 export function serializeFilterExpressionToSearchQueryParams(
-  filterExpression: FilterExpression
+  filterExpression: FilterExpression,
 ): string {
   return JSON.stringify(
     filterExpression,
@@ -14,21 +14,23 @@ export function serializeFilterExpressionToSearchQueryParams(
         return value;
       }
 
-      return `{${(value.type === FilterType.OrderOrEq
-        ? [
+      return `{${
+        (value.type === FilterType.OrderOrEq
+          ? [
             value.type,
             escapeString(value.attribute),
             escapeString(value.operator),
             escapeString(value.value),
           ]
-        : value.type === FilterType.OnlyOperator
+          : value.type === FilterType.OnlyOperator
           ? [
-              value.type,
-              escapeString(value.attribute),
-              escapeString(value.operator),
-            ]
-          : [value.type, escapeString(value.attribute), value.val1, value.val2]
-      ).join()}}`;
-    }
+            value.type,
+            escapeString(value.attribute),
+            escapeString(value.operator),
+          ]
+          : [value.type, escapeString(value.attribute), value.val1, value.val2])
+          .join()
+      }}`;
+    },
   );
 }

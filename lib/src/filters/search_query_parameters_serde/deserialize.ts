@@ -1,4 +1,4 @@
-import { FilterType, type Filter, type FilterExpression } from "../model.ts";
+import { type Filter, type FilterExpression, FilterType } from "../model.ts";
 
 function unescapeString(text?: string): string {
   if (text === undefined || text.charAt(0) !== "'") {
@@ -9,7 +9,7 @@ function unescapeString(text?: string): string {
 }
 
 function* deserializeFilter(
-  filter: string
+  filter: string,
 ): Generator<string, undefined, undefined> {
   let index: number | undefined;
   let lastIndex: number | undefined;
@@ -26,7 +26,7 @@ function* deserializeFilter(
 }
 
 export function deserializeFilterExpressionFromSearchQueryParams(
-  filterExpression: string
+  filterExpression: string,
 ): FilterExpression {
   try {
     return JSON.parse(filterExpression, function (_, value: string):

@@ -10,23 +10,21 @@ export type FilterType = TypeOfFilterType[keyof TypeOfFilterType];
 
 export type Filter =
   | {
-      type: TypeOfFilterType["OrderOrEq"];
-      operator: string;
-      attribute: string;
-      value: string;
-    }
+    type: TypeOfFilterType["OrderOrEq"];
+    operator: string;
+    attribute: string;
+    value: string;
+  }
   | {
-      type: TypeOfFilterType["OnlyOperator"];
-      operator: string;
-      attribute: string;
-    }
+    type: TypeOfFilterType["OnlyOperator"];
+    operator: string;
+    attribute: string;
+  }
   | {
-      type: TypeOfFilterType["To"];
-      attribute: string;
-      val1: number;
-      val2: number;
-    };
+    type: TypeOfFilterType["To"];
+    attribute: string;
+    val1: number;
+    val2: number;
+  };
 
 export type FilterExpression = (Filter | string | FilterExpression)[];
-
-
