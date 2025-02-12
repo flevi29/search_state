@@ -1,73 +1,47 @@
 import type { SearchState } from "../search_state.ts";
-import type { Q } from "./model.ts";
-import type { RouterState } from "../router_state.ts";
-import type { SearchBoxRouter } from "./search_box_router.ts";
-import { getState } from "../util.ts";
+import { DEFAULT_Q, type Q, type SearchBoxOptions } from "./model.ts";
+import {
+  getCachedSetterWithCallback,
+  getSearchState,
+  type CachedSetterWithCallback,
+} from "../util.ts";
 
 export class SearchBox {
-  #state?: SearchState;
+  #searchState?: SearchState;
   readonly #indexUid: string;
-  readonly #router?: SearchBoxRouter;
+  readonly #callbacks: SearchBoxOptions["callbacks"];
 
-  #q?: Q;
-  readonly setQ = (q: Q): void => {
-    const state = getState(this.#state);
+  readonly setQ: CachedSetterWithCallback<Q>;
 
-    if (q !== this.#q) {
-      this.#q = q;
+  constructor({ searchState, indexUid, callbacks }: SearchBoxOptions) {
+    this.#searchState = searchState;
+    this.#indexUid = indexUid;
+    this.#callbacks = callbacks;
 
-      this.#router?.setQ(q || undefined);
+    this.setQ = getCachedSetterWithCallback<Q>(DEFAULT_Q, (v) => {
+      const state = getSearchState(this.#searchState);
+
+      callbacks?.qListener?.(v, v === DEFAULT_Q);
 
       state.resetPaginationAndChangeQuery(
         this,
-        this.#indexUid,
-        (indexQuery) => void (indexQuery.q = q),
+        indexUid,
+        (indexQuery) => void (indexQuery.q = v)
       );
-    }
-  };
-
-  constructor(
-    state: SearchState,
-    indexUid: string,
-    router?: {
-      SearchBoxRouter: typeof SearchBoxRouter;
-      routerState: RouterState;
-      qListener: (q: Q) => void;
-    },
-  ) {
-    this.#state = state;
-    this.#indexUid = indexUid;
-
-    if (router !== undefined) {
-      const { SearchBoxRouter, routerState, qListener } = router;
-      this.#router = new SearchBoxRouter(
-        (...params) => routerState.addListener(indexUid, ...params),
-        {
-          changeQuery: (...params) =>
-            state.changeQuery(this, indexUid, ...params),
-          stateQListener: (q) => {
-            this.#q = q;
-            qListener(q);
-          },
-        },
-      );
-    }
+    });
   }
 
   readonly unmount = (): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#searchState);
 
     state.resetPaginationAndChangeQuery(
       this,
       this.#indexUid,
-      (indexQuery) => void delete indexQuery.q,
+      (indexQuery) => void delete indexQuery.q
     );
 
-    if (this.#router !== undefined) {
-      this.#router.setQ(undefined);
-      this.#router.unmount();
-    }
+    this.#callbacks?.unmount?.();
 
-    this.#state = undefined;
+    this.#searchState = undefined;
   };
 }

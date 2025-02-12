@@ -4,9 +4,10 @@ import { page } from "$app/stores";
 import { RouterState } from "@search-state/lib";
 
 function getRouterState() {
-  let identifier = 0,
-    to: ReturnType<typeof setTimeout> | null = null,
-    promiseChain = Promise.resolve();
+  let identifier = 0;
+  let to: ReturnType<typeof setTimeout> | null = null;
+  let promiseChain = Promise.resolve();
+
   const routerState = new RouterState((newState) => {
     const urlSearchParams = new URLSearchParams(
       Object.fromEntries(

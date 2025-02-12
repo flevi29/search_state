@@ -1,4 +1,6 @@
 import type { MultiSearchQuery } from "meilisearch";
+import type { SearchState } from "../search_state.ts";
+import type { RouterState } from "../router_state.ts";
 
 // export type SearchBoxConnectorParams = {
 //   /**
@@ -47,3 +49,18 @@ type MatchingStrategy = NonNullable<MultiSearchQuery["matchingStrategy"]>;
 type AttributesToSearchOn = NonNullable<
   MultiSearchQuery["attributesToSearchOn"]
 >;
+
+export type SearchBoxOptions = {
+  searchState: SearchState;
+  indexUid: string;
+  callbacks?: {
+    qListener?: (q: Q, isDefault: boolean) => void;
+    unmount?: () => void;
+  };
+};
+
+export type RouterSearchBoxOptions = SearchBoxOptions & {
+  routerState: RouterState;
+};
+
+export const DEFAULT_Q = "";

@@ -21,9 +21,9 @@ function getErrorMessage(error: unknown): string {
   return JSON.stringify(error, null, 2);
 }
 
-const LS_HOST_KEY = "0",
-  LS_API_KEY_KEY = "1",
-  LS_INDEX_KEY = "2";
+const LS_HOST_KEY = "0";
+const LS_API_KEY_KEY = "1";
+const LS_INDEX_KEY = "2";
 
 // Waiting on https://github.com/sveltejs/kit/issues/12801 to improve this
 const searchState = (() => {
@@ -32,109 +32,112 @@ const searchState = (() => {
     localStorage.getItem(LS_API_KEY_KEY) || null,
   ]);
 
-  let rawSearchState = $state<SearchState | null>(null),
-    indexes = $state<Map<string, IndexStats> | null>(null),
-    // TODO: when this changes many setting should reset
-    selectedIndex = $state<string | null>(null);
+  let rawSearchState = $state<SearchState | null>(null);
+  let indexes = $state<Map<string, IndexStats> | null>(null);
+  // TODO: when this changes many setting should reset
+  let selectedIndex = $state<string | null>(null);
 
   const searchState = derived<
-      typeof hostAndApiKey,
-      | { status: StatusType["OK"]; value: SearchState }
-      | {
-          status: StatusType["INVALID_API_KEY" | "UNKNOWN_ERROR"];
-          value: string;
-        }
-      | null
-    >(
-      hostAndApiKey,
-      ([host, apiKey], set) => {
-        if (host === null || apiKey === null) {
-          rawSearchState = null;
-          indexes = null;
-          selectedIndex = null;
-          return set(null);
-        }
+    typeof hostAndApiKey,
+    | { status: StatusType["OK"]; value: SearchState }
+    | {
+        status: StatusType["INVALID_API_KEY" | "UNKNOWN_ERROR"];
+        value: string;
+      }
+    | null
+  >(
+    hostAndApiKey,
+    ([host, apiKey], set) => {
+      if (host === null || apiKey === null) {
+        rawSearchState = null;
+        indexes = null;
+        selectedIndex = null;
+        set(null);
 
-        try {
-          const meilisearch = new MeiliSearch({ host, apiKey });
+        return;
+      }
 
-          const promise = meilisearch
-            .getRawIndexes({ limit: 50 })
-            .then(({ results }) =>
-              Promise.all(
-                results.map(({ uid }) =>
-                  meilisearch
-                    .index(uid)
-                    .getStats()
-                    .then((indexStats) => [uid, indexStats] as const),
-                ),
+      try {
+        const meilisearch = new MeiliSearch({ host, apiKey });
+
+        const promise = meilisearch
+          .getRawIndexes({ limit: 50 })
+          .then((v) =>
+            Promise.all(
+              v.results.map((v) =>
+                meilisearch
+                  .index(v.uid)
+                  .getStats()
+                  .then((indexStats) => [v.uid, indexStats] as const),
               ),
-            )
-            .then((indexStatsArr) => {
-              // TODO: errorCallback second argument
-              const st = new SearchState(meilisearch);
-              st.start();
-              set({ status: STATUS.OK, value: st });
-              rawSearchState = st;
+            ),
+          )
+          .then((indexStatsArr) => {
+            // TODO: errorCallback second argument
+            const st = new SearchState(meilisearch);
+            st.start();
+            set({ status: STATUS.OK, value: st });
+            rawSearchState = st;
 
-              indexes =
-                indexStatsArr.length === 0 ? null : new Map(indexStatsArr);
+            indexes =
+              indexStatsArr.length === 0 ? null : new Map(indexStatsArr);
 
-              if (selectedIndex === null) {
-                if (indexes === null || indexes.size === 0) {
-                  selectedIndex = null;
+            if (selectedIndex === null) {
+              if (indexes === null || indexes.size === 0) {
+                selectedIndex = null;
+              } else {
+                const localStorageSelectedIndex =
+                  localStorage.getItem(LS_INDEX_KEY);
+                if (
+                  localStorageSelectedIndex !== null &&
+                  indexes.has(localStorageSelectedIndex)
+                ) {
+                  selectedIndex = localStorageSelectedIndex;
                 } else {
-                  const localStorageSelectedIndex =
-                    localStorage.getItem(LS_INDEX_KEY);
-                  if (
-                    localStorageSelectedIndex !== null &&
-                    indexes.has(localStorageSelectedIndex)
-                  ) {
-                    selectedIndex = localStorageSelectedIndex;
-                  } else {
-                    const [firstIndex] = indexes.entries().next().value!;
-                    selectedIndex = firstIndex;
-                  }
+                  const [firstIndex] = indexes.entries().next().value!;
+                  selectedIndex = firstIndex;
                 }
               }
+            }
 
-              return st.stop;
-            })
-            .catch((error: unknown) => {
-              set({
-                status:
-                  error instanceof MeiliSearchApiError &&
-                  // https://www.meilisearch.com/docs/reference/errors/error_codes#invalid_api_key
-                  error.cause?.code === "invalid_api_key"
-                    ? STATUS.INVALID_API_KEY
-                    : STATUS.UNKNOWN_ERROR,
-                value: getErrorMessage(error),
-              });
-              rawSearchState = null;
-              indexes = null;
-              selectedIndex = null;
+            return st.stop;
+          })
+          .catch((error: unknown) => {
+            set({
+              status:
+                error instanceof MeiliSearchApiError &&
+                // https://www.meilisearch.com/docs/reference/errors/error_codes#invalid_api_key
+                error.cause?.code === "invalid_api_key"
+                  ? STATUS.INVALID_API_KEY
+                  : STATUS.UNKNOWN_ERROR,
+              value: getErrorMessage(error),
             });
-
-          // stop previous `SearchState`
-          return () => {
-            promise.then((v) => v?.()).catch(console.error);
-          };
-        } catch (error) {
-          set({
-            status: STATUS.UNKNOWN_ERROR,
-            value: getErrorMessage(error),
+            rawSearchState = null;
+            indexes = null;
+            selectedIndex = null;
           });
-          rawSearchState = null;
-          indexes = null;
-          selectedIndex = null;
-        }
-      },
-      null,
-    ),
-    isHostAndApiKeySet = derived(
-      hostAndApiKey,
-      ([host, apiKey]) => host !== null && apiKey !== null,
-    );
+
+        // stop previous `SearchState`
+        return () => {
+          promise.then((v) => v?.()).catch(console.error);
+        };
+      } catch (error) {
+        set({
+          status: STATUS.UNKNOWN_ERROR,
+          value: getErrorMessage(error),
+        });
+        rawSearchState = null;
+        indexes = null;
+        selectedIndex = null;
+      }
+    },
+    null,
+  );
+
+  const isHostAndApiKeySet = derived(
+    hostAndApiKey,
+    ([host, apiKey]) => host !== null && apiKey !== null,
+  );
 
   return {
     hostAndApiKey: readonly(hostAndApiKey),

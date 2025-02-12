@@ -6,7 +6,7 @@ import type {
   Limit,
   Offset,
 } from "./model.ts";
-import { getState } from "../util.ts";
+import { getSearchState } from "../util.ts";
 
 // Saving last hit:
 // - if offset is 0, limit will be +1 and it will be added to offset for next page;
@@ -210,7 +210,7 @@ export class HitsWithPagination<T extends Record<string, any>> {
   }
 
   readonly setLimit = (limit: Limit): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     const limitPlusOne = limit + 1;
 
@@ -235,7 +235,7 @@ export class HitsWithPagination<T extends Record<string, any>> {
   };
 
   readonly previousPage = (): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     if (!this.#hasPrevious) {
       throw new Error("no previous page");
@@ -255,7 +255,7 @@ export class HitsWithPagination<T extends Record<string, any>> {
   };
 
   readonly nextPage = (): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     if (!this.#hasNext) {
       throw new Error("no next page, or have to await response first");
@@ -278,7 +278,7 @@ export class HitsWithPagination<T extends Record<string, any>> {
   };
 
   readonly unmount = (): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     this.#removeResetPaginationListener();
     this.#removeResponseListener();

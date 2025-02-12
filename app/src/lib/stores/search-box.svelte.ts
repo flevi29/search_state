@@ -1,31 +1,25 @@
 import {
   RouterState,
-  SearchBox,
-  SearchBoxRouter,
+  getRoutedSearchBox,
   type SearchState,
 } from "@search-state/lib";
 
 export function getSearchBoxWidget(
   indexUid: string,
   searchState: SearchState,
-  routerState?: RouterState,
+  routerState: RouterState,
 ) {
-  let q = $state<string | null>(null);
+  let q = $state<string>("");
 
   return {
     get q() {
       return q;
     },
-    ...new SearchBox(
+    ...getRoutedSearchBox({
       searchState,
       indexUid,
-      routerState !== undefined
-        ? {
-            SearchBoxRouter,
-            routerState,
-            qListener: (v) => void (q = v),
-          }
-        : undefined,
-    ),
+      routerState,
+      callbacks: { qListener: (v) => void (q = v) },
+    }),
   };
 }

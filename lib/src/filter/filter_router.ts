@@ -1,13 +1,13 @@
 import type { SearchParams } from "meilisearch";
 import type { RouterState } from "../router_state.ts";
 import type { SearchState } from "../mod.ts";
-import type { Q } from "./model.ts";
+import type { Filter } from "./model.ts";
 import type {
   WithParamsExceptFirst,
   WithParamsExceptFirstTwo,
 } from "../util.ts";
 
-export class SearchBoxRouter {
+export class FilterRouter {
   readonly #removeListener: () => void;
   readonly #modifySearchParams: (
     callback: (searchParams: SearchParams) => void,
@@ -17,17 +17,17 @@ export class SearchBoxRouter {
     addRouterStateListener: WithParamsExceptFirst<RouterState["addListener"]>,
     {
       changeQuery,
-      stateQListener,
+      stateFilterListener,
     }: {
       changeQuery: WithParamsExceptFirstTwo<SearchState["changeQuery"]>;
-      stateQListener: (q: Q) => void;
+      stateFilterListener: (filter: Filter) => void;
     },
   ) {
     const { removeListener, modifySearchParams } = addRouterStateListener(
       (searchParams) => {
-        const q = searchParams?.q ?? "";
-        changeQuery((query) => void (query.q = q));
-        stateQListener(q);
+        const filter = searchParams?.filter;
+        changeQuery((query) => void (query.filter = filter));
+        stateFilterListener(q);
       },
     );
     this.#removeListener = removeListener;

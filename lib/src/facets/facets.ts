@@ -1,5 +1,5 @@
 import type { SearchState } from "../search_state.ts";
-import { getState } from "../util.ts";
+import { getSearchState } from "../util.ts";
 
 // TODO: Unfinished
 // deno-lint-ignore no-explicit-any
@@ -38,7 +38,7 @@ export class Facets<TRecord extends Record<string, any>> {
   }
 
   readonly unmount = (): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     this.#removeResponseListener();
 

@@ -1,6 +1,6 @@
 import type { MultiSearchQuery } from "meilisearch";
 import type { SearchState } from "./search_state.ts";
-import { getState } from "./util.ts";
+import { getSearchState } from "./util.ts";
 
 // export type SortByItem = {
 //   /**
@@ -141,7 +141,7 @@ export class SortBy<T extends SortRecord> {
   }
 
   readonly setSort = (key: keyof T): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     if (key !== this.#key) {
       const stringifiedSort = this.#optionsByKey.get(key);
@@ -161,7 +161,7 @@ export class SortBy<T extends SortRecord> {
   };
 
   readonly unmount = (): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     state.resetPaginationAndChangeQuery(
       this,

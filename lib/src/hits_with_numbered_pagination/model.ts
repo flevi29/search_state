@@ -1,4 +1,6 @@
 import type { MultiSearchQuery, MultiSearchResult } from "meilisearch";
+import type { SearchState } from "../search_state.ts";
+import type { RouterState } from "../router_state.ts";
 
 // type PaginationConnectorParams = {
 //   /**
@@ -41,12 +43,28 @@ export type TotalPages = NonNullable<MultiSearchResult<never>["totalPages"]>;
 
 // deno-lint-ignore no-explicit-any
 export type HitsWithNumberedPaginationOptions<T extends Record<string, any>> = {
-  initialHitsPerPage: HitsPerPage;
-  hitsPerPageListener: (hitsPerPage: HitsPerPage) => void;
-  hitsListener: (hits: Hits<T>) => void;
-  totalHitsListener: (totalHits: TotalHits) => void;
-  totalPagesListener: (totalPages: TotalPages) => void;
-  pageListener: (page: Page) => void;
+  state: SearchState;
+  indexUid: string;
+  defaultHitsPerPage?: HitsPerPage;
+  callbacks?: {
+    hitsPerPageListener?: (
+      hitsPerPage: HitsPerPage,
+      isDefault: boolean
+    ) => void;
+    hitsListener?: (hits: Hits<T>) => void;
+    totalHitsListener?: (totalHits: TotalHits) => void;
+    totalPagesListener?: (totalPages: TotalPages) => void;
+    pageListener?: (page: Page, isDefault: boolean) => void;
+    unmount?: () => void;
+  };
 };
 
-export const PAGE_ONE = 1;
+export type RoutedHitsWithNumberedPaginationOptions<
+  // deno-lint-ignore no-explicit-any
+  T extends Record<string, any>,
+> = HitsWithNumberedPaginationOptions<T> & {
+  routerState: RouterState;
+};
+
+export const DEFAULT_PAGE = 1;
+export const DEFAULT_HITS_PER_PAGE = 5;

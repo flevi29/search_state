@@ -1,7 +1,6 @@
 <script lang="ts">
   import "../app.css";
 
-  import { onDestroy } from "svelte";
   import { searchState } from "$lib/stores/search-state.svelte";
   import { routerState } from "$lib/stores/router-state.svelte";
   import { STATUS } from "$lib/stores/search-state.svelte";
@@ -17,7 +16,7 @@
 
   // TODO: Add UI logic for when there are no indexes
 
-  onDestroy(routerState.unset);
+  $effect(() => routerState.unset);
 </script>
 
 <div>

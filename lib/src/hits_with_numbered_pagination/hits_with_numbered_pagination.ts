@@ -7,10 +7,12 @@ import type {
   TotalHits,
   TotalPages,
 } from "./model.ts";
-import { getState } from "../util.ts";
-import { PAGE_ONE } from "./model.ts";
-import type { RouterState } from "../mod.ts";
-import type { HitsWithNumberedPaginationRouter } from "./hits_with_numbered_pagination_router.ts";
+import {
+  getCachedSetterWithCallback,
+  getSearchState,
+  type CachedSetterWithCallback,
+} from "../util.ts";
+import { DEFAULT_HITS_PER_PAGE, DEFAULT_PAGE } from "./model.ts";
 
 export class HitsWithNumberedPagination<
   // deno-lint-ignore no-explicit-any
@@ -18,52 +20,82 @@ export class HitsWithNumberedPagination<
 > {
   #state?: SearchState;
   readonly #indexUid: string;
-  readonly #router?: HitsWithNumberedPaginationRouter;
+  // readonly #router?: HitsWithNumberedPaginationRouter;
   readonly #removeResetPaginationListener: () => void;
   readonly #removeResponseListener: () => void;
 
-  readonly #hitsPerPageListener: HitsWithNumberedPaginationOptions<
-    T
-  >["hitsPerPageListener"];
-  readonly #pageListener: HitsWithNumberedPaginationOptions<T>["pageListener"];
+  readonly #callbacks: HitsWithNumberedPaginationOptions<T>["callbacks"];
 
-  readonly #initialHitsPerPage: HitsPerPage;
-  #hitsPerPage: HitsPerPage;
-  #page: Page;
-  #totalHits?: TotalHits;
-  #totalPages?: TotalPages;
+  readonly setHitsPerPage: CachedSetterWithCallback<HitsPerPage>;
+  readonly setPage: CachedSetterWithCallback<Page>;
+  readonly #setTotalHits: CachedSetterWithCallback<TotalHits>;
+  readonly #setTotalPages: CachedSetterWithCallback<TotalPages>;
 
-  constructor(
-    state: SearchState,
-    indexUid: string,
-    {
-      initialHitsPerPage,
-      hitsPerPageListener,
-      hitsListener,
-      totalHitsListener,
-      totalPagesListener,
-      pageListener,
-    }: HitsWithNumberedPaginationOptions<T>,
-    router?: {
-      HitsWithNumberedPaginationRouter: typeof HitsWithNumberedPaginationRouter;
-      routerState: RouterState;
-    },
-  ) {
+  constructor({
+    state,
+    indexUid,
+    defaultHitsPerPage = DEFAULT_HITS_PER_PAGE,
+    callbacks,
+  }: HitsWithNumberedPaginationOptions<T>) {
+    this.#state = state;
+    this.#indexUid = indexUid;
+    this.#callbacks = callbacks;
+
+    this.setPage = getCachedSetterWithCallback<number>(DEFAULT_PAGE, (v) => {
+      const state = getSearchState(this.#state);
+
+      callbacks?.pageListener?.(v, v === DEFAULT_PAGE);
+
+      state.changeQuery(
+        this,
+        indexUid,
+        (indexQuery) => void (indexQuery.page = v)
+      );
+    });
+
+    this.setHitsPerPage = getCachedSetterWithCallback<number>(
+      defaultHitsPerPage,
+      (v) => {
+        const state = getSearchState(this.#state);
+
+        this.#callbacks?.hitsPerPageListener?.(v, v === defaultHitsPerPage);
+
+        state.changeQuery(this, this.#indexUid, (indexQuery) => {
+          indexQuery.hitsPerPage = v;
+        });
+
+        this.setPage(null);
+      }
+    );
+
+    this.#setTotalHits = getCachedSetterWithCallback<number | undefined>(
+      undefined,
+      (v) => {
+        if (v !== undefined) {
+          callbacks?.totalHitsListener?.(v);
+        }
+      }
+    );
+
+    this.#setTotalPages = getCachedSetterWithCallback<number | undefined>(
+      undefined,
+      (v) => {
+        if (v !== undefined) {
+          callbacks?.totalPagesListener?.(v);
+        }
+      }
+    );
+
     this.#removeResetPaginationListener = state.addResetPaginationListener(
       indexUid,
-      (query) => {
-        if (query.page !== PAGE_ONE) {
-          query.page = this.#page = PAGE_ONE;
-          pageListener(PAGE_ONE);
-
-          this.#router?.setPage(undefined);
-        }
-      },
+      () => void this.setPage(null)
     );
 
     this.#removeResponseListener = state.addResponseListener(
       indexUid,
-      ({ hits, totalHits, totalPages, page }) => {
+      (response) => {
+        const { hits, totalHits, totalPages, page } = response;
+
         if (
           totalHits === undefined ||
           totalPages === undefined ||
@@ -72,108 +104,24 @@ export class HitsWithNumberedPagination<
           state.errorCallback(
             this,
             new Error(
-              "one or more of `totalHits`, `totalPages`, `page` is undefined",
-            ),
+              "one or more of `totalHits`, `totalPages`, `page` is undefined in response",
+              { cause: response }
+            )
           );
           return;
         }
 
-        hitsListener(<Hits<T>> hits);
+        callbacks?.hitsListener?.(<Hits<T>>hits);
 
-        if (totalHits !== this.#totalHits) {
-          this.#totalHits = totalHits;
-          totalHitsListener(totalHits);
-        }
-
-        if (totalPages !== this.#totalPages) {
-          this.#totalPages = totalPages;
-          totalPagesListener(totalPages);
-        }
-
-        if (page !== this.#page) {
-          this.#page = page;
-          pageListener(page);
-
-          this.#router?.setPage(page);
-        }
-      },
+        this.#setTotalHits(totalHits);
+        this.#setTotalPages(totalPages);
+        this.setPage(page);
+      }
     );
-
-    this.#state = state;
-    this.#indexUid = indexUid;
-
-    this.#hitsPerPageListener = hitsPerPageListener;
-    this.#pageListener = pageListener;
-
-    // set initial page and hitsPerPage
-    this.#initialHitsPerPage = initialHitsPerPage;
-    this.#hitsPerPage = initialHitsPerPage;
-    this.#page = PAGE_ONE;
-    state.changeQuery(this, indexUid, (indexQuery) => {
-      indexQuery.hitsPerPage = initialHitsPerPage;
-      hitsPerPageListener(initialHitsPerPage);
-      indexQuery.page = PAGE_ONE;
-      pageListener(PAGE_ONE);
-    });
-
-    if (router !== undefined) {
-      const { HitsWithNumberedPaginationRouter, routerState } = router;
-      this.#router = new HitsWithNumberedPaginationRouter(
-        initialHitsPerPage,
-        (...params) => routerState.addListener(indexUid, ...params),
-        {
-          changeQuery: (...params) =>
-            state.changeQuery(this, indexUid, ...params),
-          stateHitsPerPageListener: (hitsPerPage) => {
-            this.#hitsPerPage = hitsPerPage;
-            hitsPerPageListener(hitsPerPage);
-          },
-          statePageListener: (page) => {
-            this.#page = page;
-            pageListener(page);
-          },
-        },
-      );
-    }
   }
 
-  readonly setHitsPerPage = (hitsPerPage: HitsPerPage): void => {
-    const state = getState(this.#state);
-
-    if (hitsPerPage !== this.#hitsPerPage) {
-      this.#hitsPerPage = hitsPerPage;
-      this.#hitsPerPageListener(hitsPerPage);
-
-      this.#router?.setHitsPerPage(
-        hitsPerPage === this.#initialHitsPerPage ? undefined : hitsPerPage,
-      );
-
-      state.changeQuery(this, this.#indexUid, (indexQuery) => {
-        indexQuery.hitsPerPage = hitsPerPage;
-        indexQuery.page = PAGE_ONE;
-      });
-    }
-  };
-
-  readonly setPage = (page: Page): void => {
-    const state = getState(this.#state);
-
-    if (page !== this.#page) {
-      this.#page = page;
-      this.#pageListener(page);
-
-      this.#router?.setPage(page === PAGE_ONE ? undefined : page);
-
-      state.changeQuery(
-        this,
-        this.#indexUid,
-        (indexQuery) => void (indexQuery.page = page),
-      );
-    }
-  };
-
   readonly unmount = (): void => {
-    const state = getState(this.#state);
+    const state = getSearchState(this.#state);
 
     this.#removeResetPaginationListener();
     this.#removeResponseListener();
@@ -183,11 +131,7 @@ export class HitsWithNumberedPagination<
       delete indexQuery.hitsPerPage;
     });
 
-    if (this.#router !== undefined) {
-      this.#router.setHitsPerPage(undefined);
-      this.#router.setPage(undefined);
-      this.#router.unmount();
-    }
+    this.#callbacks?.unmount?.();
 
     this.#state = undefined;
   };

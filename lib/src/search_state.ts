@@ -9,7 +9,7 @@ type ErrorCallback = (source: unknown, error: unknown) => void;
 
 type SearchQueryMap = Map<string, MultiSearchQuery>;
 
-type FilterListener = (filter?: string) => void;
+// type FilterListener = (filter?: string) => void;
 type QueryListener = (query: MultiSearchQuery) => void;
 type ResponseListener = (response: MultiSearchResult<unknown>) => void;
 
@@ -115,33 +115,33 @@ export class SearchState {
     return indexQuery;
   }
 
-  #filterListeners = new Map<string, Set<FilterListener>>();
-  addFilterListener(indexUid: string, listener: FilterListener): () => void {
-    return addListener(this.#filterListeners, indexUid, listener);
-  }
+  // #filterListeners = new Map<string, Set<FilterListener>>();
+  // addFilterListener(indexUid: string, listener: FilterListener): () => void {
+  //   return addListener(this.#filterListeners, indexUid, listener);
+  // }
 
-  #filterCache = new Map<string, string>();
-  // TODO: Rename this
-  #handleFilters({ indexUid, filter }: MultiSearchQuery) {
-    if (Array.isArray(filter)) {
-      this.#errorCallback(this, new Error("array filters are unsupported"));
-      return;
-    }
+  // #filterCache = new Map<string, string>();
+  // // TODO: Rename this
+  // #handleFilters({ indexUid, filter }: MultiSearchQuery) {
+  //   if (Array.isArray(filter)) {
+  //     this.#errorCallback(this, new Error("array filters are unsupported"));
+  //     return;
+  //   }
 
-    const cachedFilter = this.#filterCache.get(indexUid);
-    if (filter !== cachedFilter) {
-      filter !== undefined
-        ? this.#filterCache.set(indexUid, filter)
-        : this.#filterCache.delete(indexUid);
+  //   const cachedFilter = this.#filterCache.get(indexUid);
+  //   if (filter !== cachedFilter) {
+  //     filter !== undefined
+  //       ? this.#filterCache.set(indexUid, filter)
+  //       : this.#filterCache.delete(indexUid);
 
-      const indexFilterListeners = this.#filterListeners.get(indexUid);
-      if (indexFilterListeners !== undefined) {
-        for (const listener of indexFilterListeners) {
-          listener(filter);
-        }
-      }
-    }
-  }
+  //     const indexFilterListeners = this.#filterListeners.get(indexUid);
+  //     if (indexFilterListeners !== undefined) {
+  //       for (const listener of indexFilterListeners) {
+  //         listener(filter);
+  //       }
+  //     }
+  //   }
+  // }
 
   #changeQuery(
     initiator: unknown,
@@ -155,7 +155,7 @@ export class SearchState {
       return;
     }
 
-    this.#handleFilters(indexQuery);
+    // this.#handleFilters(indexQuery);
 
     this.#search(initiator);
   }
