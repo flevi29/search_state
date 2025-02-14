@@ -1,6 +1,5 @@
 import {
-  HitsWithNumberedPagination,
-  HitsWithNumberedPaginationRouter,
+  getRoutedHitsWithNumberedPagination,
   type RouterState,
   type SearchState,
 } from "@search-state/lib";
@@ -9,7 +8,7 @@ import type { Hits } from "meilisearch";
 export function getHitsWithNumberedPaginationWidget<T>(
   indexUid: string,
   searchState: SearchState,
-  routerState?: RouterState,
+  routerState: RouterState,
 ) {
   let hitsPerPage = $state<number | null>(null),
     hits = $state<Hits<Record<string, T>> | null>(null),
@@ -36,23 +35,18 @@ export function getHitsWithNumberedPaginationWidget<T>(
     get page() {
       return page;
     },
-    ...new HitsWithNumberedPagination(
-      searchState,
+    ...getRoutedHitsWithNumberedPagination({
+      routerState,
+      state: searchState,
       indexUid,
-      {
-        initialHitsPerPage,
+      defaultHitsPerPage: initialHitsPerPage,
+      callbacks: {
         hitsPerPageListener: (v) => void (hitsPerPage = v),
         hitsListener: (v) => void (hits = v),
         totalHitsListener: (v) => void (totalHits = v),
         totalPagesListener: (v) => void (totalPages = v),
         pageListener: (v) => void (page = v),
       },
-      routerState !== undefined
-        ? {
-            HitsWithNumberedPaginationRouter: HitsWithNumberedPaginationRouter,
-            routerState,
-          }
-        : undefined,
-    ),
+    }),
   };
 }

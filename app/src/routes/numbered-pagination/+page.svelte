@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { page } from "$app/state";
   import { searchState } from "$lib/stores/search-state.svelte";
-  import { routerState } from "$lib/stores/router-state.svelte";
+  import { routerState, changeState } from "$lib/stores/router-state.svelte";
   import { getHitsWithNumberedPaginationWidget } from "$lib/stores/hits-with-numbered-pagination.svelte";
   import HitsPerPage from "$lib/components/hits-per-page.svelte";
   import Hits from "$lib/components/hits.svelte";
@@ -10,9 +11,11 @@
     getHitsWithNumberedPaginationWidget(
       searchState.selectedIndex!,
       searchState.rawValue!,
-      routerState.value,
+      routerState,
     ),
   );
+
+  $effect(() => void changeState(page));
 
   $effect(() => w.unmount);
 </script>

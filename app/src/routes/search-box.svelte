@@ -7,7 +7,7 @@
     indexUid,
     searchState,
     routerState,
-  }: { indexUid: string; searchState: SearchState; routerState?: RouterState } =
+  }: { indexUid: string; searchState: SearchState; routerState: RouterState } =
     $props();
 
   const w = $derived(getSearchBoxWidget(indexUid, searchState, routerState));

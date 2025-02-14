@@ -7,16 +7,16 @@ export function getRoutedHitsWithNumberedPagination<
 >(options: RoutedHitsWithNumberedPaginationOptions<T>) {
   const { routerState, callbacks, ...restOfOptions } = options;
 
-  const { removeListener, setPage, setHitsPerPage } =
-    routerState.addListenerAndGetSetters(
+  const { removeListener, setPage, setHitsPerPage } = routerState
+    .addListenerAndGetSetters(
       ["page", "hitsPerPage"],
       options.indexUid,
       (searchParams) => {
         hitsWithNumberedPagination.setHitsPerPage(
-          searchParams?.hitsPerPage ?? null
+          searchParams?.hitsPerPage ?? null,
         );
         hitsWithNumberedPagination.setPage(searchParams?.page ?? null);
-      }
+      },
     );
 
   const { hitsPerPageListener, pageListener, unmount, ...restOfCallbacks } =

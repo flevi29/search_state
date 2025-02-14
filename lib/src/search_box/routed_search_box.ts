@@ -7,7 +7,7 @@ export function getRoutedSearchBox(options: RouterSearchBoxOptions): SearchBox {
   const { removeListener, setQ } = routerState.addListenerAndGetSetters(
     ["q"],
     options.indexUid,
-    (searchParams) => void searchBox.setQ(searchParams?.q ?? null)
+    (searchParams) => void searchBox.setQ(searchParams?.q ?? null),
   );
 
   const { qListener, unmount, ...restOfCallbacks } = callbacks ?? {};

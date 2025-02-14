@@ -37,7 +37,6 @@
     "npm:@tailwindcss/vite@^4.0.5": "4.0.5_vite@6.1.0__lightningcss@1.29.1_lightningcss@1.29.1",
     "npm:eslint-config-prettier@^10.0.1": "10.0.1_eslint@9.20.0",
     "npm:eslint-plugin-svelte@^2.46.1": "2.46.1_eslint@9.20.0_svelte@5.19.9__acorn@8.14.0_postcss@8.5.1",
-    "npm:eslint@9.20.0": "9.20.0",
     "npm:eslint@^9.20.0": "9.20.0",
     "npm:globals@^15.14.0": "15.14.0",
     "npm:meilisearch@~0.48.2": "0.48.2",
@@ -51,7 +50,8 @@
     "npm:tailwindcss@^4.0.5": "4.0.5",
     "npm:typescript-eslint@^8.23.0": "8.23.0_eslint@9.20.0_typescript@5.7.3_@typescript-eslint+parser@8.23.0__eslint@9.20.0__typescript@5.7.3",
     "npm:typescript@^5.7.3": "5.7.3",
-    "npm:vite@^6.1.0": "6.1.0_lightningcss@1.29.1"
+    "npm:vite@6.1.0": "6.1.0",
+    "npm:vite@^6.1.0": "6.1.0"
   },
   "jsr": {
     "@david/code-block-writer@13.0.3": {

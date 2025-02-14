@@ -1,8 +1,9 @@
 <script lang="ts">
   import "../app.css";
 
+  import { page } from "$app/state";
   import { searchState } from "$lib/stores/search-state.svelte";
-  import { routerState } from "$lib/stores/router-state.svelte";
+  import { routerState, changeState } from "$lib/stores/router-state.svelte";
   import { STATUS } from "$lib/stores/search-state.svelte";
   import ApiSettings from "./api-settings.svelte";
   import IndexSelector from "./index-selector.svelte";
@@ -12,11 +13,10 @@
 
   const { children } = $props();
   const { value: searchStateValue, isHostAndApiKeySet } = searchState;
-  routerState.set();
+
+  $effect(() => void changeState(page));
 
   // TODO: Add UI logic for when there are no indexes
-
-  $effect(() => routerState.unset);
 </script>
 
 <div>
@@ -37,7 +37,7 @@
             <SearchBox
               indexUid={searchState.selectedIndex!}
               searchState={value}
-              routerState={routerState.value}
+              {routerState}
             />
 
             <!-- <SortBy indexUid={searchState.selectedIndex!} searchState={value} /> -->

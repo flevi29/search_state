@@ -16,7 +16,7 @@ function pickFromSearchParamsMap<
   U extends MyOtherType<T>,
 >(searchParamsMap: SearchParamsMap, keys: T): U {
   return Object.fromEntries(
-    keys.map((key) => [key, searchParamsMap.get(key)])
+    keys.map((key) => [key, searchParamsMap.get(key)]),
   ) as U;
 }
 
@@ -28,24 +28,27 @@ export type AllowedRecordHuhWhat = [
   AllowedRecord[keyof AllowedRecord],
 ][];
 
-export type RenameThisType<T extends HuhType> = {
-  removeListener: () => void;
-} & {
-  [TKey in T[number] as `set${Capitalize<TKey>}`]: (
-    value: SearchParams[TKey]
-  ) => void;
-};
+export type RenameThisType<T extends HuhType> =
+  & {
+    removeListener: () => void;
+  }
+  & {
+    [TKey in T[number] as `set${Capitalize<TKey>}`]: (
+      value: SearchParams[TKey],
+    ) => void;
+  };
 
 export class RouterState {
   readonly #indexMapOfSearchParamsMap = new Map<string, SearchParamsMap>();
   readonly #callback: () => void;
 
+  // TODO: Need an initial state
   constructor(callback: (newState: AllowedRecordHuhWhat) => void) {
     this.#callback = () =>
       callback(
         Array.from(this.#indexMapOfSearchParamsMap.entries()).map(
-          ([key, val]) => [key, Object.fromEntries(val.entries())] as const
-        )
+          ([key, val]) => [key, Object.fromEntries(val.entries())] as const,
+        ),
       );
   }
 
@@ -55,12 +58,16 @@ export class RouterState {
   addListenerAndGetSetters<const T extends HuhType, U extends MyOtherType<T>>(
     keys: T,
     indexUid: string,
-    listener: (searchParams: U) => void
+    listener: (searchParams: U) => void,
   ): RenameThisType<T> {
-    const currentSearchParamsMap =
-      this.#indexMapOfSearchParamsMap.get(indexUid);
+    const currentSearchParamsMap = this.#indexMapOfSearchParamsMap.get(
+      indexUid,
+    );
     if (currentSearchParamsMap !== undefined) {
-      listener(pickFromSearchParamsMap(currentSearchParamsMap, keys));
+      // to avoid race condition in routed widgets
+      setTimeout(() =>
+        listener(pickFromSearchParamsMap(currentSearchParamsMap, keys))
+      );
     }
 
     const listenerAndKeys: [SearchParamsListener, T] = [
@@ -90,8 +97,8 @@ export class RouterState {
     };
 
     for (const key of keys) {
-      obj[`set${key.charAt(0).toUpperCase}${key.slice(1)}`] = (
-        v: SearchParams[typeof key]
+      obj[`set${key.charAt(0).toUpperCase()}${key.slice(1)}`] = (
+        v: SearchParams[typeof key],
       ) => {
         if (isRemoved) {
           throw new Error("removed, cannot be called anymore");
@@ -104,7 +111,9 @@ export class RouterState {
         const searchParams = this.#indexMapOfSearchParamsMap.get(indexUid);
 
         if (searchParams === undefined) {
-          this.#indexMapOfSearchParamsMap.set(indexUid, new Map([[key, v]]));
+          if (v !== undefined) {
+            this.#indexMapOfSearchParamsMap.set(indexUid, new Map([[key, v]]));
+          }
         } else {
           if (v === undefined) {
             searchParams.delete(key);
@@ -145,11 +154,16 @@ export class RouterState {
     }
 
     for (const [key, val] of Object.entries(state)) {
-      const searchParamsMap = this.#indexMapOfSearchParamsMap.get(key)!;
+      let searchParamsMap = this.#indexMapOfSearchParamsMap.get(key);
 
-      for (const searchParamsMapKey of searchParamsMap.keys()) {
-        if (!Object.hasOwn(val, searchParamsMapKey)) {
-          searchParamsMap.delete(searchParamsMapKey);
+      if (searchParamsMap === undefined) {
+        searchParamsMap = new Map();
+        this.#indexMapOfSearchParamsMap.set(key, searchParamsMap);
+      } else {
+        for (const searchParamsMapKey of searchParamsMap.keys()) {
+          if (!Object.hasOwn(val, searchParamsMapKey)) {
+            searchParamsMap.delete(searchParamsMapKey);
+          }
         }
       }
 
