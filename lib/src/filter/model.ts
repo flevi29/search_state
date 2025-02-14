@@ -15,21 +15,21 @@ export type ParsedFilterType =
 
 export type ParsedFilter =
   | {
-      type: TypeOfParsedFilterType["OrderOrEq"];
-      operator: string;
-      attribute: string;
-      value: string;
-    }
+    type: TypeOfParsedFilterType["OrderOrEq"];
+    operator: string;
+    attribute: string;
+    value: string;
+  }
   | {
-      type: TypeOfParsedFilterType["OnlyOperator"];
-      operator: string;
-      attribute: string;
-    }
+    type: TypeOfParsedFilterType["OnlyOperator"];
+    operator: string;
+    attribute: string;
+  }
   | {
-      type: TypeOfParsedFilterType["To"];
-      attribute: string;
-      val1: number;
-      val2: number;
-    };
+    type: TypeOfParsedFilterType["To"];
+    attribute: string;
+    val1: number;
+    val2: number;
+  };
 
 export type FilterExpression = (ParsedFilter | string | FilterExpression)[];

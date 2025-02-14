@@ -1,4 +1,8 @@
-import { type Filter, type FilterExpression, FilterType } from "../model.ts";
+import {
+  type FilterExpression,
+  type ParsedFilter,
+  ParsedFilterType,
+} from "../model.ts";
 
 function unescapeString(text?: string): string {
   if (text === undefined || text.charAt(0) !== "'") {
@@ -31,7 +35,7 @@ export function deserializeFilterExpressionFromSearchQueryParams(
   try {
     return JSON.parse(filterExpression, function (_, value: string):
       | string
-      | Filter {
+      | ParsedFilter {
       if (value.at(0) !== "{" || value.at(-1) !== "}") {
         return value;
       }
@@ -40,20 +44,20 @@ export function deserializeFilterExpressionFromSearchQueryParams(
       const type = Number(deserIter.next().value);
 
       switch (type) {
-        case FilterType.OrderOrEq:
+        case ParsedFilterType.OrderOrEq:
           return {
             type,
             operator: unescapeString(deserIter.next().value),
             attribute: unescapeString(deserIter.next().value),
             value: unescapeString(deserIter.next().value),
           };
-        case FilterType.OnlyOperator:
+        case ParsedFilterType.OnlyOperator:
           return {
             type,
             operator: unescapeString(deserIter.next().value),
             attribute: unescapeString(deserIter.next().value),
           };
-        case FilterType.To:
+        case ParsedFilterType.To:
           return {
             type,
             attribute: unescapeString(deserIter.next().value),

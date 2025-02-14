@@ -8,9 +8,9 @@ import type {
   TotalPages,
 } from "./model.ts";
 import {
+  type CachedSetterWithCallback,
   getCachedSetterWithCallback,
   getSearchState,
-  type CachedSetterWithCallback,
 } from "../util.ts";
 import { DEFAULT_HITS_PER_PAGE, DEFAULT_PAGE } from "./model.ts";
 
@@ -49,7 +49,7 @@ export class HitsWithNumberedPagination<
       state.changeQuery(
         this,
         indexUid,
-        (indexQuery) => void (indexQuery.page = v)
+        (indexQuery) => void (indexQuery.page = v),
       );
     });
 
@@ -65,7 +65,7 @@ export class HitsWithNumberedPagination<
         });
 
         this.setPage(null);
-      }
+      },
     );
 
     this.#setTotalHits = getCachedSetterWithCallback<number | undefined>(
@@ -74,7 +74,7 @@ export class HitsWithNumberedPagination<
         if (v !== undefined) {
           callbacks?.totalHitsListener?.(v);
         }
-      }
+      },
     );
 
     this.#setTotalPages = getCachedSetterWithCallback<number | undefined>(
@@ -83,12 +83,12 @@ export class HitsWithNumberedPagination<
         if (v !== undefined) {
           callbacks?.totalPagesListener?.(v);
         }
-      }
+      },
     );
 
     this.#removeResetPaginationListener = state.addResetPaginationListener(
       indexUid,
-      () => void this.setPage(null)
+      () => void this.setPage(null),
     );
 
     this.#removeResponseListener = state.addResponseListener(
@@ -105,18 +105,18 @@ export class HitsWithNumberedPagination<
             this,
             new Error(
               "one or more of `totalHits`, `totalPages`, `page` is undefined in response",
-              { cause: response }
-            )
+              { cause: response },
+            ),
           );
           return;
         }
 
-        callbacks?.hitsListener?.(<Hits<T>>hits);
+        callbacks?.hitsListener?.(<Hits<T>> hits);
 
         this.#setTotalHits(totalHits);
         this.#setTotalPages(totalPages);
         this.setPage(page);
-      }
+      },
     );
   }
 

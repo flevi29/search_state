@@ -49,7 +49,7 @@ export type HitsWithNumberedPaginationOptions<T extends Record<string, any>> = {
   callbacks?: {
     hitsPerPageListener?: (
       hitsPerPage: HitsPerPage,
-      isDefault: boolean
+      isDefault: boolean,
     ) => void;
     hitsListener?: (hits: Hits<T>) => void;
     totalHitsListener?: (totalHits: TotalHits) => void;

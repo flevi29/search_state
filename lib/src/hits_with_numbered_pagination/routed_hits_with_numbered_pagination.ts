@@ -7,17 +7,17 @@ export function getRoutedHitsWithNumberedPagination<
 >(options: RoutedHitsWithNumberedPaginationOptions<T>) {
   const { routerState, callbacks, ...restOfOptions } = options;
 
-  // TODO: Make RouterState provide some method to manipulate search params instead of directly interacting with the search params object
-  //       so we stop repeating ourselves so much (error prone, less simple)
-  const { removeListener, modifySearchParams } = routerState.addListener(
-    options.indexUid,
-    (searchParams) => {
-      hitsWithNumberedPagination.setHitsPerPage(
-        searchParams?.hitsPerPage ?? null
-      );
-      hitsWithNumberedPagination.setPage(searchParams?.page ?? null);
-    }
-  );
+  const { removeListener, setPage, setHitsPerPage } =
+    routerState.addListenerAndGetSetters(
+      ["page", "hitsPerPage"],
+      options.indexUid,
+      (searchParams) => {
+        hitsWithNumberedPagination.setHitsPerPage(
+          searchParams?.hitsPerPage ?? null
+        );
+        hitsWithNumberedPagination.setPage(searchParams?.page ?? null);
+      }
+    );
 
   const { hitsPerPageListener, pageListener, unmount, ...restOfCallbacks } =
     callbacks ?? {};
@@ -27,28 +27,16 @@ export function getRoutedHitsWithNumberedPagination<
     callbacks: {
       ...restOfCallbacks,
       hitsPerPageListener(v, isDefault) {
-        modifySearchParams(
-          (searchParams) =>
-            void (isDefault
-              ? delete searchParams.hitsPerPage
-              : (searchParams.hitsPerPage = v))
-        );
+        setHitsPerPage(isDefault ? undefined : v);
         hitsPerPageListener?.(v, isDefault);
       },
       pageListener(v, isDefault) {
-        modifySearchParams(
-          (searchParams) =>
-            void (isDefault
-              ? delete searchParams.page
-              : (searchParams.page = v))
-        );
+        setPage(isDefault ? undefined : v);
         pageListener?.(v, isDefault);
       },
       unmount() {
-        modifySearchParams((searchParams) => {
-          delete searchParams.hitsPerPage;
-          delete searchParams.page;
-        });
+        setHitsPerPage(undefined);
+        setPage(undefined);
         removeListener();
         unmount?.();
       },

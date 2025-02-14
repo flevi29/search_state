@@ -4,7 +4,8 @@ import type { RouterSearchBoxOptions } from "./model.ts";
 export function getRoutedSearchBox(options: RouterSearchBoxOptions): SearchBox {
   const { routerState, callbacks, ...restOfOptions } = options;
 
-  const { removeListener, modifySearchParams } = routerState.addListener(
+  const { removeListener, setQ } = routerState.addListenerAndGetSetters(
+    ["q"],
     options.indexUid,
     (searchParams) => void searchBox.setQ(searchParams?.q ?? null)
   );
@@ -16,14 +17,11 @@ export function getRoutedSearchBox(options: RouterSearchBoxOptions): SearchBox {
     callbacks: {
       ...restOfCallbacks,
       qListener(v, isDefault) {
-        modifySearchParams(
-          (searchParams) =>
-            void (isDefault ? delete searchParams.q : (searchParams.q = v))
-        );
+        setQ(isDefault ? undefined : v);
         qListener?.(v, isDefault);
       },
       unmount() {
-        modifySearchParams((searchParams) => void delete searchParams.q);
+        setQ(undefined);
         removeListener();
         unmount?.();
       },

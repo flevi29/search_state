@@ -28,7 +28,7 @@ type GenericVoidFunction = (...args: any[]) => void;
 export function addListener(
   mapOfIndexListeners: Map<string, Set<GenericVoidFunction>>,
   indexUid: string,
-  listener: GenericVoidFunction
+  listener: GenericVoidFunction,
 ): () => void {
   let indexListeners = mapOfIndexListeners.get(indexUid);
   if (indexListeners === undefined) {
@@ -47,7 +47,7 @@ export function addListener(
 
 // deno-lint-ignore no-explicit-any
 export type CachedSetterWithCallback<T extends NonNullable<any> | undefined> = (
-  v: T | null
+  v: T | null,
 ) => void;
 
 export function getCachedSetterWithCallback<

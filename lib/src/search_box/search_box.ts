@@ -1,9 +1,9 @@
 import type { SearchState } from "../search_state.ts";
 import { DEFAULT_Q, type Q, type SearchBoxOptions } from "./model.ts";
 import {
+  type CachedSetterWithCallback,
   getCachedSetterWithCallback,
   getSearchState,
-  type CachedSetterWithCallback,
 } from "../util.ts";
 
 export class SearchBox {
@@ -26,7 +26,7 @@ export class SearchBox {
       state.resetPaginationAndChangeQuery(
         this,
         indexUid,
-        (indexQuery) => void (indexQuery.q = v)
+        (indexQuery) => void (indexQuery.q = v),
       );
     });
   }
@@ -37,7 +37,7 @@ export class SearchBox {
     state.resetPaginationAndChangeQuery(
       this,
       this.#indexUid,
-      (indexQuery) => void delete indexQuery.q
+      (indexQuery) => void delete indexQuery.q,
     );
 
     this.#callbacks?.unmount?.();

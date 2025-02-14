@@ -5,7 +5,7 @@ function escapeString(text: string): string {
 }
 
 export function serializeToMeiliFilter(
-  filterExpression: FilterExpression
+  filterExpression: FilterExpression,
 ): string {
   const iter = filterExpression[Symbol.iterator]();
 
@@ -28,7 +28,7 @@ export function serializeToMeiliFilter(
     if (typeof firstValue === "string") {
       throw new Error(
         "expected first value in group to be a filter and filters to be separated by logical operators",
-        { cause: filterExpression }
+        { cause: filterExpression },
       );
     }
 
@@ -38,20 +38,26 @@ export function serializeToMeiliFilter(
       filterStr += `(${serializeToMeiliFilter(firstValue)})`;
     } else {
       switch (firstValue.type) {
-        case FilterType.OrderOrEq:
-          filterStr += `${escapeString(
-            firstValue.attribute
-          )} ${firstValue.operator} ${escapeString(firstValue.value)}`;
+        case ParsedFilterType.OrderOrEq:
+          filterStr += `${
+            escapeString(
+              firstValue.attribute,
+            )
+          } ${firstValue.operator} ${escapeString(firstValue.value)}`;
           break;
-        case FilterType.To:
-          filterStr += `${escapeString(
-            firstValue.attribute
-          )} ${firstValue.val1} TO ${firstValue.val2}`;
+        case ParsedFilterType.To:
+          filterStr += `${
+            escapeString(
+              firstValue.attribute,
+            )
+          } ${firstValue.val1} TO ${firstValue.val2}`;
           break;
-        case FilterType.OnlyOperator:
-          filterStr += `${escapeString(
-            firstValue.attribute
-          )} ${firstValue.operator}`;
+        case ParsedFilterType.OnlyOperator:
+          filterStr += `${
+            escapeString(
+              firstValue.attribute,
+            )
+          } ${firstValue.operator}`;
       }
     }
 
